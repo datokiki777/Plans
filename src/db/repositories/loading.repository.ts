@@ -28,8 +28,14 @@ export class LocalLoadingRepository implements LoadingRepository {
   }
 
   async listLists(opts: { includeArchived?: boolean } = {}): Promise<LoadingList[]> {
-    const all = await this.db.loadingLists.orderBy("createdAt").reverse().toArray();
-    return opts.includeArchived ? all : all.filter((l) => l.archivedAt === null);
+    // NOTE: createdAt is not part of the loadingLists Dexie index
+    // ("id, archivedAt" - see db/database.ts), so .orderBy("createdAt")
+    // throws (unindexed keyPath) and silently left the default list empty
+    // while searchLists() - a plain .filter() scan - worked fine. Sort in
+    // JS instead, same pattern already used elsewhere (e.g. StayRepository).
+    const all = await this.db.loadingLists.toArray();
+    const filtered = opts.includeArchived ? all : all.filter((l) => l.archivedAt === null);
+    return filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   async getList(id: string): Promise<LoadingList | undefined> {

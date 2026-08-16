@@ -24,6 +24,30 @@ describe("LocalLoadingRepository", () => {
     expect(items.map((i) => i.name)).toEqual(["პანელი 1", "პანელი 2"]);
   });
 
+  it("listLists() (the default, no-search view) returns created lists, newest first, excluding archived", async () => {
+    // Regression test: listLists() previously called .orderBy("createdAt"),
+    // but createdAt is not part of the loadingLists Dexie index, which
+    // made the query reject and left the default Loading screen showing
+    // "no lists found" even though lists existed (searchLists(), a plain
+    // scan, found them fine - which is how the bug was noticed).
+    const a = await repo.createList({ title: "108" });
+    await new Promise((r) => setTimeout(r, 5));
+    const b = await repo.createList({ title: "876" });
+    const archived = await repo.createList({ title: "დაარქივებული" });
+    await repo.archiveList(archived.id);
+
+    const lists = await repo.listLists();
+    expect(lists.map((l) => l.id)).toEqual([b.id, a.id]);
+    expect(lists.map((l) => l.id)).not.toContain(archived.id);
+  });
+
+  it("listLists({ includeArchived: true }) includes archived lists too", async () => {
+    const archived = await repo.createList({ title: "დაარქივებული" });
+    await repo.archiveList(archived.id);
+    const lists = await repo.listLists({ includeArchived: true });
+    expect(lists.map((l) => l.id)).toContain(archived.id);
+  });
+
   it("archiveList/restoreList round-trips archivedAt", async () => {
     const list = await repo.createList({ title: "სია" });
     await repo.archiveList(list.id);
