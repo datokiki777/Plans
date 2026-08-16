@@ -6,9 +6,12 @@ import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { useToast } from "@/shared/ui/Toast";
+import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { loadingRepository } from "@/db/repositories";
 import { useLoadingLists } from "@/features/loading/useLoadingLists";
 import { LoadingListDialog } from "@/features/loading/LoadingListDialog";
+import { LoadingShareCard } from "@/features/loading/LoadingShareCard";
+import { useLoadingShare } from "@/features/loading/useLoadingShare";
 import type { LoadingList } from "@/entities/loading-list";
 import "./LoadingPage.css";
 
@@ -18,6 +21,7 @@ export default function LoadingPage() {
   const { lists, reload } = useLoadingLists(query, { includeArchived });
   const [editTarget, setEditTarget] = useState<LoadingList | null | undefined>(undefined);
   const showToast = useToast();
+  const { cardRef, activeList, activeItems, sharing, share } = useLoadingShare();
 
   const handleDuplicate = async (list: LoadingList) => {
     await loadingRepository.duplicateList(list.id);
@@ -33,6 +37,18 @@ export default function LoadingPage() {
   const handleRestore = async (list: LoadingList) => {
     await loadingRepository.restoreList(list.id);
     reload();
+  };
+
+  const handleShare = async (list: LoadingList) => {
+    try {
+      const outcome = await share(list);
+      if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
+      else if (outcome === "downloaded-only")
+        showToast("სურათი ჩამოიტვირთა. ეს მოწყობილობა/ბრაუზერი პირდაპირ გაზიარებას ვერ უჭერს მხარს.", "warn");
+    } catch (error) {
+      console.error("Loading share failed:", error);
+      showToast("გაზიარება ვერ განხორციელდა, სცადე თავიდან.", "warn");
+    }
   };
 
   return (
@@ -65,6 +81,7 @@ export default function LoadingPage() {
               {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
             </div>
             <div className="loading-page__row-actions">
+              <ShareIconButton onClick={() => void handleShare(list)} disabled={sharing} />
               <Button onClick={() => setEditTarget(list)}>რედაქტირება</Button>
               <Button onClick={() => void handleDuplicate(list)}>დუბლირება</Button>
               {list.archivedAt ? (
@@ -80,6 +97,9 @@ export default function LoadingPage() {
       </div>
 
       <LoadingListDialog open={editTarget !== undefined} onClose={() => setEditTarget(undefined)} list={editTarget} onSaved={reload} />
+
+      {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
+      <LoadingShareCard ref={cardRef} title={activeList?.title ?? ""} items={activeItems} />
     </div>
   );
 }

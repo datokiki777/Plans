@@ -141,6 +141,16 @@ describe("LocalJobRepository", () => {
     expect((await jobs.getById(job.id))?.statusBeforeArchive).toBe("planned");
   });
 
+  it("list() with NO filters (default/unfiltered view) returns all jobs, newest first - regression test for an unindexed orderBy that used to throw", async () => {
+    const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
+    const j1 = await jobs.create(blankJobInput({ clientId: client.id, clientSnapshot: { fullName: "x", address: "", phone: "" } }));
+    await new Promise((r) => setTimeout(r, 5));
+    const j2 = await jobs.create(blankJobInput({ clientId: client.id, clientSnapshot: { fullName: "x", address: "", phone: "" } }));
+
+    const result = await jobs.list();
+    expect(result.map((j) => j.id)).toEqual([j2.id, j1.id]);
+  });
+
   it("list() filters by status and by group using indexed queries", async () => {
     const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
     const groupA = await groups.create({ name: "A" });

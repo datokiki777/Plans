@@ -68,17 +68,19 @@ export class LocalJobRepository implements JobRepository {
     } else if (groupId) {
       collection = this.db.jobs.where("groupId").equals(groupId);
     } else {
-      collection = this.db.jobs.orderBy("createdAt").reverse();
+      // NOTE: createdAt is not part of the jobs Dexie index (see
+      // db/database.ts), so .orderBy("createdAt") used to throw here -
+      // silently leaving the default/unfiltered Jobs view stuck on stale
+      // results (same class of bug found and fixed in LoadingRepository).
+      // Fetch all and sort in JS instead.
+      collection = this.db.jobs.toCollection();
     }
 
     if (offset) collection = collection.offset(offset);
     if (limit) collection = collection.limit(limit);
 
     const results = await collection.toArray();
-    // orderBy() above already sorts the unfiltered case; indexed .where()
-    // queries don't guarantee order, so sort explicitly (newest first) -
-    // cheap since each result page is already bounded by limit.
-    return status || groupId ? results.sort((a, b) => b.createdAt.localeCompare(a.createdAt)) : results;
+    return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   async search(query: string, opts: { limit?: number } = {}): Promise<Job[]> {

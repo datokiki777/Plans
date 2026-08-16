@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { useJobs } from "@/features/jobs/useJobs";
+import { useJobsFilterStore } from "@/features/jobs/useJobsFilterStore";
 import { JobForm } from "@/features/jobs/JobForm";
 import { groupRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
@@ -23,9 +24,13 @@ const STATUS_TABS: Array<{ label: string; value: JobStatus | "" }> = [
 ];
 
 export default function JobsPage() {
-  const [status, setStatus] = useState<JobStatus | "">("");
-  const [groupId, setGroupId] = useState("");
-  const [query, setQuery] = useState("");
+  const status = useJobsFilterStore((s) => s.status);
+  const groupId = useJobsFilterStore((s) => s.groupId);
+  const query = useJobsFilterStore((s) => s.query);
+  const setStatus = useJobsFilterStore((s) => s.setStatus);
+  const setGroupId = useJobsFilterStore((s) => s.setGroupId);
+  const setQuery = useJobsFilterStore((s) => s.setQuery);
+
   const [groups, setGroups] = useState<Group[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const { jobs, reload } = useJobs({ status: status || undefined, groupId: groupId || undefined, query });
@@ -46,7 +51,7 @@ export default function JobsPage() {
         }
       />
 
-      <SearchInput placeholder="მოძებნე კლიენტის სახელით/მისამართით…" onSearch={setQuery} />
+      <SearchInput placeholder="მოძებნე კლიენტის სახელით/მისამართით…" onSearch={setQuery} defaultValue={query} />
 
       {!query && (
         <div className="jobs-page__tabs">

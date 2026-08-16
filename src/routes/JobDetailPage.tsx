@@ -16,6 +16,7 @@ import { formatDateOnly } from "@/shared/lib/date";
 import { JobForm } from "@/features/jobs/JobForm";
 import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
+import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import "./JobDetailPage.css";
 
 function DetailRow({ label, value }: { label: string; value?: string | string[] | null }) {
@@ -104,9 +105,7 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
         title={job.clientSnapshot.fullName || "უსახელო კლიენტი"}
         actions={
           <>
-            <Button onClick={() => void handleShare()} disabled={sharing}>
-              გაზიარება
-            </Button>
+            <ShareIconButton onClick={() => void handleShare()} disabled={sharing} />
             <Button onClick={() => setEditOpen(true)}>რედაქტირება</Button>
           </>
         }

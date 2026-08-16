@@ -1,0 +1,22 @@
+.share-icon-button {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-brand);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.share-icon-button:hover:not(:disabled) {
+  background: var(--color-brand-soft);
+}
+
+.share-icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
