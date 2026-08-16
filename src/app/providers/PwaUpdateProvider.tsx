@@ -19,8 +19,18 @@ export function PwaUpdateProvider({ children }: { children: ReactNode }) {
   } = useRegisterSW({
     onRegisteredSW(_url, registration) {
       if (!registration) return;
-      // Check for a new version periodically, matching V1's hourly check.
-      window.setInterval(() => void registration.update(), 60 * 60 * 1000);
+
+      // Check right away (don't wait up to an hour for the first check),
+      // plus every time the app regains focus/visibility - this is the
+      // moment a PWA is most often "reopened" after being closed/backgrounded,
+      // and periodically as a fallback.
+      void registration.update();
+      const checkNow = () => void registration.update();
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") checkNow();
+      });
+      window.addEventListener("focus", checkNow);
+      window.setInterval(checkNow, 60 * 60 * 1000);
     }
   });
 
