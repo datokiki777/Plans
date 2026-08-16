@@ -145,11 +145,6 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
           <h3>{cat.label}</h3>
           {drafts[cat.key as "trays"].map((draft) => (
             <div key={draft.key} className="loading-dialog__row">
-              <input
-                type="checkbox"
-                checked={draft.checked}
-                onChange={(e) => patchRow(cat.key, draft.key, { checked: e.target.checked })}
-              />
               {cat.hasName && (
                 <Input
                   className="loading-dialog__name"
