@@ -100,7 +100,11 @@ export function JobForm({ open, onClose, job, initialGroupId, onSaved }: JobForm
       onSaved({ ...job, ...patch });
       showToast("სამუშაო განახლდა.", "ok");
     } else {
-      const created = await jobRepository.create({ ...fields, clientId, status: "planned" });
+      // New jobs default to "active", not "planned" - the Jobs page tabs
+      // (ყველა/აქტიური/დაარქივებული) intentionally exclude planned/completed,
+      // so a job created as "planned" would save successfully but never
+      // appear anywhere until manually changed from the detail screen.
+      const created = await jobRepository.create({ ...fields, clientId, status: "active" });
       onSaved(created);
       showToast("სამუშაო დაემატა.", "ok");
     }
