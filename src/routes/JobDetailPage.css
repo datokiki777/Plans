@@ -2,22 +2,6 @@
   margin-bottom: var(--space-3);
 }
 
-.job-detail__status-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-}
-
-.job-detail__status-head .select-field {
-  max-width: 200px;
-}
-
-.job-detail__actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
 .job-detail__section {
   margin-bottom: var(--space-3);
 }

@@ -1,0 +1,26 @@
+.status-toggle {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.status-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.status-toggle--active {
+  background: var(--color-brand-soft);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+.status-toggle--inactive {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}

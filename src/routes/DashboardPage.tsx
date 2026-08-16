@@ -29,17 +29,16 @@ export default function DashboardPage() {
     (async () => {
       // Every query below is bounded (indexed .where() + .count(), or a
       // small .limit()) - never a full-table toArray() over every Job.
-      const [activeCount, activeJobs, plannedJobs, recent, workers, recentLoadingLists] = await Promise.all([
+      const [activeCount, activeJobs, recent, workers, recentLoadingLists] = await Promise.all([
         jobRepository.list({ status: "active" }).then((r) => r.length),
         jobRepository.list({ status: "active", limit: 50 }),
-        jobRepository.list({ status: "planned", limit: 50 }),
         jobRepository.list({ limit: 5 }),
         workerRepository.list(),
         loadingRepository.listLists({ includeArchived: false })
       ]);
 
       const today = todayDateOnly();
-      const upcoming = [...activeJobs, ...plannedJobs]
+      const upcoming = activeJobs
         .filter((j) => j.jobDate && j.jobDate >= today)
         .sort((a, b) => (a.jobDate as string).localeCompare(b.jobDate as string))
         .slice(0, 5);

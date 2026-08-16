@@ -3,14 +3,12 @@ import { useParams } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Card } from "@/shared/ui/Card";
 import { Button } from "@/shared/ui/Button";
-import { SelectField } from "@/shared/ui/SelectField";
-import { StatusBadge } from "@/shared/ui/StatusBadge";
+import { StatusToggle } from "@/shared/ui/StatusToggle";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/Toast";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { jobRepository, groupRepository } from "@/db/repositories";
-import type { Job, JobStatus } from "@/entities/job";
-import { JOB_STATUS_LABELS, JOB_STATUS_ORDER, JOB_STATUS_TONES } from "@/entities/job";
+import type { Job } from "@/entities/job";
 import type { Group } from "@/entities/group";
 import { formatDateOnly } from "@/shared/lib/date";
 import { JobForm } from "@/features/jobs/JobForm";
@@ -67,21 +65,15 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
   const [editOpen, setEditOpen] = useState(false);
   const { cardRef, activeJob, activeGroupName, sharing, share } = useJobShare();
 
-  const handleStatusChange = async (next: JobStatus) => {
-    await jobRepository.setStatus(job.id, next);
-    onReload();
-    showToast("სტატუსი განახლდა.", "ok");
-  };
-
-  const handleArchive = async () => {
+  const handleToggleStatus = async () => {
+    if (job.status === "archived") {
+      await jobRepository.restore(job.id);
+      onReload();
+      return;
+    }
     const ok = await confirm({ title: "სამუშაოს დაარქივება", message: "სამუშაო გადავა არქივში. მონაცემები არ წაიშლება.", danger: false });
     if (!ok) return;
     await jobRepository.archive(job.id);
-    onReload();
-  };
-
-  const handleRestore = async () => {
-    await jobRepository.restore(job.id);
     onReload();
   };
 
@@ -111,25 +103,12 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
       />
 
       <Card className="job-detail__status-card">
-        <div className="job-detail__status-head">
-          <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
-          <SelectField
-            value={job.status}
-            onChange={(v) => void handleStatusChange(v as JobStatus)}
-            title="სტატუსის შეცვლა"
-            allowClear={false}
-            options={JOB_STATUS_ORDER.map((s) => ({ value: s, label: JOB_STATUS_LABELS[s] }))}
-          />
-        </div>
-        <div className="job-detail__actions">
-          {job.status === "archived" ? (
-            <Button onClick={() => void handleRestore()}>აღდგენა</Button>
-          ) : (
-            <Button variant="danger" onClick={() => void handleArchive()}>
-              დაარქივება
-            </Button>
-          )}
-        </div>
+        <StatusToggle
+          active={job.status !== "archived"}
+          activeLabel="აქტიური"
+          inactiveLabel="დაარქივებული"
+          onToggle={() => void handleToggleStatus()}
+        />
       </Card>
 
       <Card className="job-detail__section">
