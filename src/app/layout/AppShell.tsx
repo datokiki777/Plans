@@ -12,7 +12,6 @@ const PRIMARY_NAV = [
 ];
 
 const SECONDARY_NAV = [
-  { to: "/clients", label: "კლიენტები" },
   { to: "/groups", label: "ჯგუფები" },
   { to: "/templates", label: "შაბლონები" },
   { to: "/settings", label: "პარამეტრები" }

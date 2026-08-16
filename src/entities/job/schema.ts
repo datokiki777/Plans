@@ -2,17 +2,20 @@ import { z } from "zod";
 import { isDateOnlyString } from "@/shared/lib/date";
 
 export const jobFormSchema = z.object({
-  clientId: z.string().trim().min(1, "კლიენტი აუცილებელია"),
+  fullName: z.string().trim().min(1, "სახელი აუცილებელია"),
+  address: z.string().trim(),
+  phone: z.string().trim(),
+  googleMapsLink: z.string().trim(),
   groupId: z.string().trim().min(1, "ჯგუფი აუცილებელია"),
   jobDate: z
     .string()
     .trim()
     .refine((v) => v === "" || isDateOnlyString(v), "თარიღის ფორმატი არასწორია"),
-  jobDurationDays: z.string().trim(), // "" or "1".."7" from a <select>, parsed on submit
+  jobDurationDays: z.string().trim(),
   packageType: z.string().trim(),
   antiSlip: z.string().trim(),
   showerTraySize: z.string().trim(),
-  glassPartitionSizeText: z.string(), // newline-separated, see jobFormToInput()
+  glassPartitionSizeText: z.string(),
   hingedDoorSize: z.string().trim(),
   panelColor: z.string().trim(),
   floorPanelColor: z.string().trim(),
@@ -25,7 +28,10 @@ export const jobFormSchema = z.object({
 export type JobFormValues = z.infer<typeof jobFormSchema>;
 
 export const JOB_FORM_DEFAULTS: JobFormValues = {
-  clientId: "",
+  fullName: "",
+  address: "",
+  phone: "",
+  googleMapsLink: "",
   groupId: "",
   jobDate: "",
   jobDurationDays: "",
@@ -53,11 +59,14 @@ function linesToText(lines: string[]): string {
   return lines.join("\n");
 }
 
-/** Converts submitted form values into the persisted-shape fields (excludes
- * id/status/clientSnapshot/timestamps, which the caller supplies). */
+/** Converts submitted form values into the persisted-shape Job fields
+ * (excludes id/clientId/status/timestamps, which the caller supplies -
+ * clientId is resolved separately since it depends on a dedup lookup, not
+ * a pure transform). Name/address/phone map directly into clientSnapshot -
+ * the form has no separate "client" step, matching the simplified model
+ * (a Job's contact details ARE the form, not a picked reference). */
 export function jobFormToPersistedFields(values: JobFormValues) {
   return {
-    clientId: values.clientId,
     groupId: values.groupId || null,
     jobDate: values.jobDate || null,
     jobDurationDays: values.jobDurationDays ? Number(values.jobDurationDays) : null,
@@ -71,13 +80,16 @@ export function jobFormToPersistedFields(values: JobFormValues) {
     panelHeight: values.panelHeight,
     installables: textToLines(values.installablesText),
     extraWork: textToLines(values.extraWorkText),
-    workNotes: textToLines(values.workNotesText)
+    workNotes: textToLines(values.workNotesText),
+    clientSnapshot: { fullName: values.fullName, address: values.address, phone: values.phone }
   };
 }
 
-/** The inverse - used to populate the edit form from a persisted Job. */
+/** The inverse - used to populate the edit form from a persisted Job.
+ * Name/address/phone come from the Job's own clientSnapshot (historically
+ * accurate as of when this Job was saved). */
 export function jobToFormValues(job: {
-  clientId: string;
+  clientSnapshot: { fullName: string; address: string; phone: string };
   groupId: string | null;
   jobDate: string | null;
   jobDurationDays: number | null;
@@ -92,9 +104,11 @@ export function jobToFormValues(job: {
   installables: string[];
   extraWork: string[];
   workNotes: string[];
-}): JobFormValues {
+}): Omit<JobFormValues, "googleMapsLink"> {
   return {
-    clientId: job.clientId,
+    fullName: job.clientSnapshot.fullName,
+    address: job.clientSnapshot.address,
+    phone: job.clientSnapshot.phone,
     groupId: job.groupId ?? "",
     jobDate: job.jobDate ?? "",
     jobDurationDays: job.jobDurationDays ? String(job.jobDurationDays) : "",

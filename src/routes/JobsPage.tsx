@@ -10,35 +10,33 @@ import { useToast } from "@/shared/ui/Toast";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { SelectField } from "@/shared/ui/SelectField";
 import { useJobs } from "@/features/jobs/useJobs";
-import { useJobsFilterStore } from "@/features/jobs/useJobsFilterStore";
+import { useJobsFilterStore, type JobsListTab } from "@/features/jobs/useJobsFilterStore";
 import { JobForm } from "@/features/jobs/JobForm";
 import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
 import { groupRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
-import { JOB_STATUS_LABELS, JOB_STATUS_TONES, type Job, type JobStatus } from "@/entities/job";
+import { JOB_STATUS_LABELS, JOB_STATUS_TONES, type Job } from "@/entities/job";
 import { formatDateOnly } from "@/shared/lib/date";
 import "./JobsPage.css";
 
-const STATUS_TABS: Array<{ label: string; value: JobStatus | "" }> = [
-  { label: "ყველა აქტიური", value: "" },
-  { label: JOB_STATUS_LABELS.planned, value: "planned" },
-  { label: JOB_STATUS_LABELS.active, value: "active" },
-  { label: JOB_STATUS_LABELS.completed, value: "completed" },
-  { label: JOB_STATUS_LABELS.archived, value: "archived" }
+const TABS: Array<{ label: string; value: JobsListTab }> = [
+  { label: "ყველა", value: "all" },
+  { label: "აქტიური", value: "active" },
+  { label: "დაარქივებული", value: "archived" }
 ];
 
 export default function JobsPage() {
-  const status = useJobsFilterStore((s) => s.status);
+  const tab = useJobsFilterStore((s) => s.tab);
   const groupId = useJobsFilterStore((s) => s.groupId);
   const query = useJobsFilterStore((s) => s.query);
-  const setStatus = useJobsFilterStore((s) => s.setStatus);
+  const setTab = useJobsFilterStore((s) => s.setTab);
   const setGroupId = useJobsFilterStore((s) => s.setGroupId);
   const setQuery = useJobsFilterStore((s) => s.setQuery);
 
   const [groups, setGroups] = useState<Group[]>([]);
   const [formOpen, setFormOpen] = useState(false);
-  const { jobs, reload } = useJobs({ status: status || undefined, groupId: groupId || undefined, query });
+  const { jobs, reload } = useJobs({ tab, groupId: groupId || undefined, query });
   const showToast = useToast();
   const { cardRef, activeJob, activeGroupName, sharing, share } = useJobShare();
 
@@ -72,23 +70,6 @@ export default function JobsPage() {
         }
       />
 
-      <SearchInput placeholder="მოძებნე კლიენტის სახელით/მისამართით…" onSearch={setQuery} defaultValue={query} />
-
-      {!query && (
-        <div className="jobs-page__tabs">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              className={`jobs-page__tab${status === tab.value ? " jobs-page__tab--active" : ""}`}
-              onClick={() => setStatus(tab.value)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       <div className="jobs-page__group-filter">
         <SelectField
           value={groupId}
@@ -99,6 +80,23 @@ export default function JobsPage() {
         />
       </div>
 
+      <SearchInput placeholder="მოძებნე სახელით/მისამართით…" onSearch={setQuery} defaultValue={query} />
+
+      {!query && (
+        <div className="jobs-page__tabs">
+          {TABS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              className={`jobs-page__tab${tab === t.value ? " jobs-page__tab--active" : ""}`}
+              onClick={() => setTab(t.value)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {jobs.length === 0 && <EmptyState title="სამუშაო არ მოიძებნა" description="დაამატე პირველი სამუშაო ზემოთა ღილაკით." />}
 
       <div className="jobs-page__list">
@@ -106,7 +104,7 @@ export default function JobsPage() {
           <Card key={job.id} className="jobs-page__row">
             <Link to={`/jobs/${job.id}`} className="jobs-page__row-link">
               <div className="jobs-page__row-head">
-                <strong>{job.clientSnapshot.fullName || "უსახელო კლიენტი"}</strong>
+                <strong>{job.clientSnapshot.fullName || "უსახელო სამუშაო"}</strong>
                 <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
               </div>
               <p className="jobs-page__row-meta">
@@ -128,7 +126,7 @@ export default function JobsPage() {
         ))}
       </div>
 
-      <JobForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={reload} />
+      <JobForm open={formOpen} onClose={() => setFormOpen(false)} initialGroupId={groupId} onSaved={reload} />
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
       <JobShareCard ref={cardRef} job={activeJob} groupName={activeGroupName} />

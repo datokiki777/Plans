@@ -1,11 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { jobRepository } from "@/db/repositories";
-import type { Job, JobStatus } from "@/entities/job";
+import type { Job } from "@/entities/job";
+import type { JobsListTab } from "./useJobsFilterStore";
 
 export interface JobsFilter {
-  status?: JobStatus;
+  tab: JobsListTab;
   groupId?: string;
   query?: string;
+}
+
+async function fetchByTab(tab: JobsListTab, groupId?: string): Promise<Job[]> {
+  if (tab === "active" || tab === "archived") {
+    return jobRepository.list({ status: tab, groupId, limit: 100 });
+  }
+  // "all" = active + archived combined, per the simplified Jobs page - not
+  // literally every status (planned/completed jobs, if any, are not shown
+  // here; they remain reachable/editable from the Job detail screen).
+  const [active, archived] = await Promise.all([
+    jobRepository.list({ status: "active", groupId, limit: 100 }),
+    jobRepository.list({ status: "archived", groupId, limit: 100 })
+  ]);
+  return [...active, ...archived].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export function useJobs(filter: JobsFilter) {
@@ -17,9 +32,7 @@ export function useJobs(filter: JobsFilter) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const task = filter.query?.trim()
-      ? jobRepository.search(filter.query)
-      : jobRepository.list({ status: filter.status, groupId: filter.groupId, limit: 100 });
+    const task = filter.query?.trim() ? jobRepository.search(filter.query) : fetchByTab(filter.tab, filter.groupId);
     task.then((result) => {
       if (!cancelled) {
         setJobs(result);
@@ -30,7 +43,7 @@ export function useJobs(filter: JobsFilter) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter.status, filter.groupId, filter.query, reloadToken]);
+  }, [filter.tab, filter.groupId, filter.query, reloadToken]);
 
   return { jobs, loading, reload };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Card } from "@/shared/ui/Card";
 import { Button } from "@/shared/ui/Button";
@@ -62,7 +62,6 @@ export default function JobDetailPage() {
 }
 
 function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | null; onReload: () => void }) {
-  const navigate = useNavigate();
   const showToast = useToast();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
@@ -102,7 +101,7 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
     <div>
       <PageHeader
         eyebrow="Plans"
-        title={job.clientSnapshot.fullName || "უსახელო კლიენტი"}
+        title={job.clientSnapshot.fullName || "უსახელო სამუშაო"}
         actions={
           <>
             <ShareIconButton onClick={() => void handleShare()} disabled={sharing} />
@@ -134,7 +133,7 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
       </Card>
 
       <Card className="job-detail__section">
-        <h2 className="job-detail__section-title">კლიენტი</h2>
+        <h2 className="job-detail__section-title">საკონტაქტო ინფორმაცია</h2>
         <DetailRow label="სახელი" value={job.clientSnapshot.fullName} />
         <DetailRow label="მისამართი" value={job.clientSnapshot.address} />
         {job.clientSnapshot.phone && (
@@ -145,9 +144,6 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
             </a>
           </div>
         )}
-        <button type="button" className="job-detail__link-button" onClick={() => navigate(`/clients/${job.clientId}`)}>
-          კლიენტის გვერდზე გადასვლა
-        </button>
       </Card>
 
       <Card className="job-detail__section">

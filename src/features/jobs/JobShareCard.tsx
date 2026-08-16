@@ -64,8 +64,8 @@ export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(functi
       <p className="job-share-card__subtitle">ქართული სამუშაო ანგარიში</p>
 
       {hasClientSection && (
-        <Section title="კლიენტის მონაცემები">
-          <Field label="კლიენტი" value={job.clientSnapshot.fullName} />
+        <Section title="საკონტაქტო ინფორმაცია">
+          <Field label="სახელი" value={job.clientSnapshot.fullName} />
           <Field label="მისამართი" value={job.clientSnapshot.address} />
           <Field label="ტელეფონი" value={job.clientSnapshot.phone} />
           <Field label="სამუშაოს თარიღი" value={schedule} />

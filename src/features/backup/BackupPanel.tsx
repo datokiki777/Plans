@@ -83,7 +83,7 @@ export function BackupPanel() {
       {pending && (
         <div className="backup-panel__preview">
           <p>
-            ნაპოვნია: კლიენტები {pending.data.clients.length}, სამუშაოები {pending.data.jobs.length}, ჯგუფები {pending.data.groups.length},
+            ნაპოვნია: სამუშაოები {pending.data.jobs.length}, ჯგუფები {pending.data.groups.length},
             შაბლონები {pending.data.fieldTemplates.length}, დატვირთვის სიები {pending.data.loadingLists.length}, მუშები{" "}
             {pending.data.workers.length}
           </p>

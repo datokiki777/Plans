@@ -5,7 +5,7 @@ describe("job form transforms", () => {
   it("splits multiline textarea text into a trimmed, non-empty string array", () => {
     const fields = jobFormToPersistedFields({
       ...JOB_FORM_DEFAULTS,
-      clientId: "c1",
+      fullName: "გიორგი",
       groupId: "g1",
       installablesText: "Mischbatterie\n  Brauseset  \n\nRegendusche\n"
     });
@@ -13,7 +13,7 @@ describe("job form transforms", () => {
   });
 
   it('empty textarea produces an empty array, not [""]', () => {
-    const fields = jobFormToPersistedFields({ ...JOB_FORM_DEFAULTS, clientId: "c1", groupId: "g1" });
+    const fields = jobFormToPersistedFields({ ...JOB_FORM_DEFAULTS, fullName: "გიორგი", groupId: "g1" });
     expect(fields.installables).toEqual([]);
     expect(fields.extraWork).toEqual([]);
     expect(fields.workNotes).toEqual([]);
@@ -21,19 +21,30 @@ describe("job form transforms", () => {
   });
 
   it("empty jobDate/jobDurationDays become null, not empty string/NaN", () => {
-    const fields = jobFormToPersistedFields({ ...JOB_FORM_DEFAULTS, clientId: "c1", groupId: "g1" });
+    const fields = jobFormToPersistedFields({ ...JOB_FORM_DEFAULTS, fullName: "გიორგი", groupId: "g1" });
     expect(fields.jobDate).toBeNull();
     expect(fields.jobDurationDays).toBeNull();
   });
 
   it("jobDurationDays parses to a number", () => {
-    const fields = jobFormToPersistedFields({ ...JOB_FORM_DEFAULTS, clientId: "c1", groupId: "g1", jobDurationDays: "3" });
+    const fields = jobFormToPersistedFields({ ...JOB_FORM_DEFAULTS, fullName: "გიორგი", groupId: "g1", jobDurationDays: "3" });
     expect(fields.jobDurationDays).toBe(3);
   });
 
-  it("jobToFormValues -> jobFormToPersistedFields round-trips array fields correctly", () => {
+  it("name/address/phone map directly into clientSnapshot - no separate client step", () => {
+    const fields = jobFormToPersistedFields({
+      ...JOB_FORM_DEFAULTS,
+      fullName: "გიორგი მაისურაძე",
+      address: "თბილისი",
+      phone: "555111222",
+      groupId: "g1"
+    });
+    expect(fields.clientSnapshot).toEqual({ fullName: "გიორგი მაისურაძე", address: "თბილისი", phone: "555111222" });
+  });
+
+  it("jobToFormValues -> jobFormToPersistedFields round-trips array fields and clientSnapshot correctly", () => {
     const original = {
-      clientId: "c1",
+      clientSnapshot: { fullName: "გიორგი მაისურაძე", address: "თბილისი", phone: "555111222" },
       groupId: "g1",
       jobDate: "2026-08-15",
       jobDurationDays: 2,
@@ -50,7 +61,16 @@ describe("job form transforms", () => {
       workNotes: []
     };
     const formValues = jobToFormValues(original);
-    const roundTripped = jobFormToPersistedFields(formValues);
-    expect(roundTripped).toMatchObject(original);
+    const roundTripped = jobFormToPersistedFields({ ...formValues, googleMapsLink: "" });
+    expect(roundTripped.clientSnapshot).toEqual(original.clientSnapshot);
+    expect(roundTripped).toMatchObject({
+      groupId: original.groupId,
+      jobDate: original.jobDate,
+      jobDurationDays: original.jobDurationDays,
+      glassPartitionSize: original.glassPartitionSize,
+      installables: original.installables,
+      extraWork: original.extraWork,
+      workNotes: original.workNotes
+    });
   });
 });

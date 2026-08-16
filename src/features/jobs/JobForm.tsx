@@ -7,30 +7,28 @@ import { FormField, Input, Textarea } from "@/shared/ui/fields";
 import { SelectField } from "@/shared/ui/SelectField";
 import { useToast } from "@/shared/ui/Toast";
 import { clientRepository, groupRepository, jobRepository } from "@/db/repositories";
-import type { Client } from "@/entities/client";
 import type { Group } from "@/entities/group";
 import type { Job } from "@/entities/job";
 import { jobFormSchema, JOB_FORM_DEFAULTS, jobFormToPersistedFields, jobToFormValues, type JobFormValues } from "@/entities/job";
+import { findMatchingClient } from "@/entities/client";
+import { normalizeMapsLink } from "@/shared/lib/maps";
 import { TEMPLATE_FIELD_KEYS, TEMPLATE_FIELD_LABELS, type FieldTemplate, type TemplateFieldKey } from "@/entities/template";
 import { useAllFieldTemplates } from "@/features/templates/useFieldTemplates";
 import { TemplateFieldButton } from "@/features/templates/TemplateFieldButton";
-import { ClientForm } from "@/features/clients/ClientForm";
 import "./JobForm.css";
 
 export interface JobFormProps {
   open: boolean;
   onClose: () => void;
   job?: Job | null;
-  /** Pre-select a client, e.g. when starting a Job from a Client's detail page. */
-  initialClientId?: string;
+  /** Pre-select a group, e.g. the group currently selected on the Jobs list -
+   * still changeable in the form. */
+  initialGroupId?: string;
   onSaved: (job: Job) => void;
 }
 
 const DURATION_OPTIONS = ["1", "2", "3", "4", "5", "6", "7"];
 
-/** The single-value templated fields share both a JobFormValues key name and
- * a TemplateFieldKey name - kept literally identical on purpose so this
- * union works for both without any unsafe casts. */
 type SingleTemplateFieldName = Exclude<TemplateFieldKey, "glassPartitionSize" | "installables">;
 
 const SINGLE_TEMPLATE_FIELDS: SingleTemplateFieldName[] = [
@@ -43,11 +41,9 @@ const SINGLE_TEMPLATE_FIELDS: SingleTemplateFieldName[] = [
   "panelHeight"
 ];
 
-export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFormProps) {
+export function JobForm({ open, onClose, job, initialGroupId, onSaved }: JobFormProps) {
   const showToast = useToast();
-  const [clients, setClients] = useState<Client[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [quickClientOpen, setQuickClientOpen] = useState(false);
   const { byField: templatesByField } = useAllFieldTemplates(TEMPLATE_FIELD_KEYS);
 
   const {
@@ -65,43 +61,46 @@ export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFor
 
   useEffect(() => {
     if (!open) return;
-    Promise.all([clientRepository.list(), groupRepository.list()]).then(([c, g]) => {
-      setClients(c);
-      setGroups(g);
-    });
-    reset(job ? jobToFormValues(job) : { ...JOB_FORM_DEFAULTS, clientId: initialClientId ?? "" });
+    groupRepository.list().then(setGroups);
+    reset(job ? { ...jobToFormValues(job), googleMapsLink: "" } : { ...JOB_FORM_DEFAULTS, groupId: initialGroupId ?? "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, job, initialClientId]);
+  }, [open, job, initialGroupId]);
+
+  const resolveClientId = async (values: JobFormValues): Promise<string> => {
+    const googleMapsLink = normalizeMapsLink(values.googleMapsLink);
+    if (job) {
+      await clientRepository.update(job.clientId, {
+        fullName: values.fullName,
+        address: values.address,
+        phone: values.phone,
+        ...(googleMapsLink ? { googleMapsLink } : {})
+      });
+      return job.clientId;
+    }
+    const existing = await clientRepository.list({ includeArchived: true });
+    const match = findMatchingClient(existing, values);
+    if (match) return match.id;
+    const created = await clientRepository.create({
+      fullName: values.fullName,
+      address: values.address,
+      phone: values.phone,
+      googleMapsLink,
+      notes: ""
+    });
+    return created.id;
+  };
 
   const onSubmit = handleSubmit(async (values) => {
     const fields = jobFormToPersistedFields(values);
-    const client = clients.find((c) => c.id === values.clientId);
-    if (!client) {
-      showToast("კლიენტი ვერ მოიძებნა.", "warn");
-      return;
-    }
+    const clientId = await resolveClientId(values);
 
     if (job) {
-      // Snapshot is only refreshed if the assigned client actually changed on
-      // this save - editing other fields (or the Client's own record
-      // elsewhere) must never silently rewrite historical data. See
-      // DATA_MODEL.md §2 and MIGRATION_PLAN.md.
-      const clientChanged = job.clientId !== values.clientId;
-      const patch = {
-        ...fields,
-        ...(clientChanged
-          ? { clientSnapshot: { fullName: client.fullName, address: client.address, phone: client.phone } }
-          : {})
-      };
+      const patch = { ...fields, clientId };
       await jobRepository.update(job.id, patch);
       onSaved({ ...job, ...patch });
       showToast("სამუშაო განახლდა.", "ok");
     } else {
-      const created = await jobRepository.create({
-        ...fields,
-        status: "planned",
-        clientSnapshot: { fullName: client.fullName, address: client.address, phone: client.phone }
-      });
+      const created = await jobRepository.create({ ...fields, clientId, status: "planned" });
       onSaved(created);
       showToast("სამუშაო დაემატა.", "ok");
     }
@@ -126,27 +125,6 @@ export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFor
       }
     >
       <form onSubmit={(e) => void onSubmit(e)} className="job-form">
-        <FormField label="კლიენტი" error={errors.clientId?.message}>
-          <div className="job-form__client-row">
-            <Controller
-              name="clientId"
-              control={control}
-              render={({ field }) => (
-                <SelectField
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="— აირჩიე კლიენტი —"
-                  title="კლიენტის არჩევა"
-                  options={clients.map((c) => ({ value: c.id, label: c.fullName }))}
-                />
-              )}
-            />
-            <Button type="button" onClick={() => setQuickClientOpen(true)}>
-              + ახალი
-            </Button>
-          </div>
-        </FormField>
-
         <FormField label="ჯგუფი" error={errors.groupId?.message}>
           <Controller
             name="groupId"
@@ -161,6 +139,21 @@ export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFor
               />
             )}
           />
+        </FormField>
+
+        <FormField label="სახელი და გვარი" error={errors.fullName?.message}>
+          <Input {...register("fullName")} autoComplete="off" />
+        </FormField>
+        <div className="job-form__two-col">
+          <FormField label="მისამართი">
+            <Input {...register("address")} autoComplete="off" />
+          </FormField>
+          <FormField label="ტელეფონი">
+            <Input {...register("phone")} type="tel" autoComplete="off" />
+          </FormField>
+        </div>
+        <FormField label="Google Maps ლინკი" hint="ლინკი ან უბრალო მისამართი - ავტომატურად გადაკეთდება">
+          <Input {...register("googleMapsLink")} type="url" autoComplete="off" />
         </FormField>
 
         <div className="job-form__two-col">
@@ -249,15 +242,6 @@ export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFor
           <Textarea rows={3} {...register("workNotesText")} />
         </FormField>
       </form>
-
-      <ClientForm
-        open={quickClientOpen}
-        onClose={() => setQuickClientOpen(false)}
-        onSaved={(newClient) => {
-          setClients((prev) => [...prev, newClient].sort((a, b) => a.fullName.localeCompare(b.fullName, "ka")));
-          setValue("clientId", newClient.id, { shouldDirty: true, shouldValidate: true });
-        }}
-      />
     </Dialog>
   );
 }

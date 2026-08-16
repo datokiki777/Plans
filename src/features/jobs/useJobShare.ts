@@ -29,7 +29,7 @@ export function useJobShare() {
       return await shareImage({
         blob,
         filename: buildJobShareFilename(job),
-        title: job.clientSnapshot.fullName || "კლიენტი",
+        title: job.clientSnapshot.fullName || "სამუშაო",
         shareText: buildJobShareText(client?.googleMapsLink)
       });
     } finally {

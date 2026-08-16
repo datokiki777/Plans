@@ -11,7 +11,7 @@ import "./LegacyImportPanel.css";
 
 const COUNT_LABELS: Record<keyof TransformResult["counts"], string> = {
   jobs: "სამუშაოები",
-  clients: "კლიენტები",
+  clients: "პირები",
   groups: "ჯგუფები",
   fieldTemplates: "შაბლონები",
   loadingLists: "დატვირთვის სიები",
