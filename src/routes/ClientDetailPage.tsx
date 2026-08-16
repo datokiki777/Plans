@@ -6,6 +6,8 @@ import { Button } from "@/shared/ui/Button";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
+import { useToast } from "@/shared/ui/Toast";
+import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { clientRepository, jobRepository } from "@/db/repositories";
 import type { Client } from "@/entities/client";
 import type { Job } from "@/entities/job";
@@ -13,6 +15,8 @@ import { JOB_STATUS_LABELS, JOB_STATUS_TONES } from "@/entities/job";
 import { formatDateOnly } from "@/shared/lib/date";
 import { ClientForm } from "@/features/clients/ClientForm";
 import { JobForm } from "@/features/jobs/JobForm";
+import { JobShareCard } from "@/features/jobs/JobShareCard";
+import { useJobShare } from "@/features/jobs/useJobShare";
 import "./ClientDetailPage.css";
 
 export default function ClientDetailPage() {
@@ -22,6 +26,8 @@ export default function ClientDetailPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [jobFormOpen, setJobFormOpen] = useState(false);
+  const showToast = useToast();
+  const { cardRef, activeJob, activeGroupName, sharing, share } = useJobShare();
 
   const load = useCallback(() => {
     if (!id) return;
@@ -46,6 +52,19 @@ export default function ClientDetailPage() {
   const handleRestore = async () => {
     await clientRepository.restore(client.id);
     load();
+  };
+
+  const handleShareJob = async (job: Job) => {
+    try {
+      const outcome = await share(job);
+      if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
+      else if (outcome === "downloaded-with-link-copied") showToast("სურათი ჩამოიტვირთა, Maps ლინკი დაკოპირდა — ჩასვი WhatsApp-ში.", "ok");
+      else if (outcome === "downloaded-only")
+        showToast("სურათი ჩამოიტვირთა. ეს მოწყობილობა/ბრაუზერი პირდაპირ გაზიარებას ვერ უჭერს მხარს.", "warn");
+    } catch (error) {
+      console.error("Job share failed:", error);
+      showToast("გაზიარება ვერ განხორციელდა, სცადე თავიდან.", "warn");
+    }
   };
 
   return (
@@ -89,14 +108,22 @@ export default function ClientDetailPage() {
       {jobs.length === 0 && <EmptyState title="სამუშაო ჯერ არ არის" description="დაამატე პირველი სამუშაო ზემოთა ღილაკით." />}
       <div className="client-detail__jobs-list">
         {jobs.map((job) => (
-          <Link key={job.id} to={`/jobs/${job.id}`} className="client-detail__job-row">
-            <Card>
+          <Card key={job.id} className="client-detail__job-row">
+            <Link to={`/jobs/${job.id}`} className="client-detail__job-row-link">
               <div className="client-detail__job-row-head">
                 <span>{formatDateOnly(job.jobDate)}</span>
                 <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
               </div>
-            </Card>
-          </Link>
+            </Link>
+            <ShareIconButton
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                void handleShareJob(job);
+              }}
+              disabled={sharing}
+            />
+          </Card>
         ))}
       </div>
 
@@ -107,6 +134,9 @@ export default function ClientDetailPage() {
         onSaved={(updated) => setClient(updated)}
       />
       <JobForm open={jobFormOpen} onClose={() => setJobFormOpen(false)} initialClientId={client.id} onSaved={load} />
+
+      {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
+      <JobShareCard ref={cardRef} job={activeJob} groupName={activeGroupName} />
     </div>
   );
 }

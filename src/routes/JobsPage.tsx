@@ -6,12 +6,16 @@ import { EmptyState } from "@/shared/ui/EmptyState";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
+import { useToast } from "@/shared/ui/Toast";
+import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { useJobs } from "@/features/jobs/useJobs";
 import { useJobsFilterStore } from "@/features/jobs/useJobsFilterStore";
 import { JobForm } from "@/features/jobs/JobForm";
+import { JobShareCard } from "@/features/jobs/JobShareCard";
+import { useJobShare } from "@/features/jobs/useJobShare";
 import { groupRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
-import { JOB_STATUS_LABELS, JOB_STATUS_TONES, type JobStatus } from "@/entities/job";
+import { JOB_STATUS_LABELS, JOB_STATUS_TONES, type Job, type JobStatus } from "@/entities/job";
 import { formatDateOnly } from "@/shared/lib/date";
 import "./JobsPage.css";
 
@@ -34,10 +38,26 @@ export default function JobsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const { jobs, reload } = useJobs({ status: status || undefined, groupId: groupId || undefined, query });
+  const showToast = useToast();
+  const { cardRef, activeJob, activeGroupName, sharing, share } = useJobShare();
 
   useEffect(() => {
     groupRepository.list().then(setGroups);
   }, []);
+
+  const handleShare = async (job: Job) => {
+    try {
+      const groupName = groups.find((g) => g.id === job.groupId)?.name ?? null;
+      const outcome = await share(job, groupName);
+      if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
+      else if (outcome === "downloaded-with-link-copied") showToast("სურათი ჩამოიტვირთა, Maps ლინკი დაკოპირდა — ჩასვი WhatsApp-ში.", "ok");
+      else if (outcome === "downloaded-only")
+        showToast("სურათი ჩამოიტვირთა. ეს მოწყობილობა/ბრაუზერი პირდაპირ გაზიარებას ვერ უჭერს მხარს.", "warn");
+    } catch (error) {
+      console.error("Job share failed:", error);
+      showToast("გაზიარება ვერ განხორციელდა, სცადე თავიდან.", "warn");
+    }
+  };
 
   return (
     <div>
@@ -83,8 +103,8 @@ export default function JobsPage() {
 
       <div className="jobs-page__list">
         {jobs.map((job) => (
-          <Link key={job.id} to={`/jobs/${job.id}`} className="jobs-page__row">
-            <Card>
+          <Card key={job.id} className="jobs-page__row">
+            <Link to={`/jobs/${job.id}`} className="jobs-page__row-link">
               <div className="jobs-page__row-head">
                 <strong>{job.clientSnapshot.fullName || "უსახელო კლიენტი"}</strong>
                 <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
@@ -93,12 +113,25 @@ export default function JobsPage() {
                 {formatDateOnly(job.jobDate)}
                 {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
               </p>
-            </Card>
-          </Link>
+            </Link>
+            <div className="jobs-page__row-actions">
+              <ShareIconButton
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void handleShare(job);
+                }}
+                disabled={sharing}
+              />
+            </div>
+          </Card>
         ))}
       </div>
 
       <JobForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={reload} />
+
+      {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
+      <JobShareCard ref={cardRef} job={activeJob} groupName={activeGroupName} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { hasShareValue, formatJobShareSchedule } from "@/entities/job";
 import "./JobShareCard.css";
 
 export interface JobShareCardProps {
-  job: Job;
+  job: Job | null;
   groupName?: string | null;
 }
 
@@ -41,6 +41,8 @@ function ListField({ items }: { items: string[] }) {
  * sketch (out of V2 scope). Every field/section is omitted entirely when
  * empty, matching V1's hasValue-driven omission. */
 export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(function JobShareCard({ job, groupName }, ref) {
+  if (!job) return <div ref={ref} className="job-share-card" />;
+
   const schedule = formatJobShareSchedule(job);
   const hasClientSection =
     hasShareValue(job.clientSnapshot.fullName) ||
