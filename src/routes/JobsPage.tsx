@@ -8,6 +8,7 @@ import { Card } from "@/shared/ui/Card";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { useToast } from "@/shared/ui/Toast";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
+import { SelectField } from "@/shared/ui/SelectField";
 import { useJobs } from "@/features/jobs/useJobs";
 import { useJobsFilterStore } from "@/features/jobs/useJobsFilterStore";
 import { JobForm } from "@/features/jobs/JobForm";
@@ -89,14 +90,13 @@ export default function JobsPage() {
       )}
 
       <div className="jobs-page__group-filter">
-        <select value={groupId} onChange={(e) => setGroupId(e.target.value)} className="ui-field">
-          <option value="">ყველა ჯგუფი</option>
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
+        <SelectField
+          value={groupId}
+          onChange={setGroupId}
+          placeholder="ყველა ჯგუფი"
+          title="ჯგუფის მიხედვით გაფილტვრა"
+          options={groups.map((g) => ({ value: g.id, label: g.name }))}
+        />
       </div>
 
       {jobs.length === 0 && <EmptyState title="სამუშაო არ მოიძებნა" description="დაამატე პირველი სამუშაო ზემოთა ღილაკით." />}

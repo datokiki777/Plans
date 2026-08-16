@@ -3,7 +3,8 @@ import { useForm, Controller, type UseFormRegister, type UseFormSetValue, type U
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog } from "@/shared/ui/Dialog";
 import { Button } from "@/shared/ui/Button";
-import { FormField, Input, Select, Textarea } from "@/shared/ui/fields";
+import { FormField, Input, Textarea } from "@/shared/ui/fields";
+import { SelectField } from "@/shared/ui/SelectField";
 import { useToast } from "@/shared/ui/Toast";
 import { clientRepository, groupRepository, jobRepository } from "@/db/repositories";
 import type { Client } from "@/entities/client";
@@ -127,14 +128,19 @@ export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFor
       <form onSubmit={(e) => void onSubmit(e)} className="job-form">
         <FormField label="კლიენტი" error={errors.clientId?.message}>
           <div className="job-form__client-row">
-            <Select {...register("clientId")}>
-              <option value="">— აირჩიე კლიენტი —</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.fullName}
-                </option>
-              ))}
-            </Select>
+            <Controller
+              name="clientId"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="— აირჩიე კლიენტი —"
+                  title="კლიენტის არჩევა"
+                  options={clients.map((c) => ({ value: c.id, label: c.fullName }))}
+                />
+              )}
+            />
             <Button type="button" onClick={() => setQuickClientOpen(true)}>
               + ახალი
             </Button>
@@ -142,14 +148,19 @@ export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFor
         </FormField>
 
         <FormField label="ჯგუფი" error={errors.groupId?.message}>
-          <Select {...register("groupId")}>
-            <option value="">— აირჩიე ჯგუფი —</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </Select>
+          <Controller
+            name="groupId"
+            control={control}
+            render={({ field }) => (
+              <SelectField
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="— აირჩიე ჯგუფი —"
+                title="ჯგუფის არჩევა"
+                options={groups.map((g) => ({ value: g.id, label: g.name }))}
+              />
+            )}
+          />
         </FormField>
 
         <div className="job-form__two-col">
@@ -157,14 +168,19 @@ export function JobForm({ open, onClose, job, initialClientId, onSaved }: JobFor
             <Input type="date" {...register("jobDate")} />
           </FormField>
           <FormField label="ხანგრძლივობა">
-            <Select {...register("jobDurationDays")}>
-              <option value="">—</option>
-              {DURATION_OPTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d} დღიანი
-                </option>
-              ))}
-            </Select>
+            <Controller
+              name="jobDurationDays"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="—"
+                  title="ხანგრძლივობის არჩევა"
+                  options={DURATION_OPTIONS.map((d) => ({ value: d, label: `${d} დღიანი` }))}
+                />
+              )}
+            />
           </FormField>
         </div>
 

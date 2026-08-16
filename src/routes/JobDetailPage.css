@@ -9,7 +9,7 @@
   margin-bottom: var(--space-2);
 }
 
-.job-detail__status-head select {
+.job-detail__status-head .select-field {
   max-width: 200px;
 }
 

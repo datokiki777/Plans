@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Card } from "@/shared/ui/Card";
 import { Button } from "@/shared/ui/Button";
-import { Select } from "@/shared/ui/fields";
+import { SelectField } from "@/shared/ui/SelectField";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/Toast";
@@ -114,13 +114,13 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
       <Card className="job-detail__status-card">
         <div className="job-detail__status-head">
           <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
-          <Select value={job.status} onChange={(e) => void handleStatusChange(e.target.value as JobStatus)}>
-            {JOB_STATUS_ORDER.map((s) => (
-              <option key={s} value={s}>
-                {JOB_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </Select>
+          <SelectField
+            value={job.status}
+            onChange={(v) => void handleStatusChange(v as JobStatus)}
+            title="სტატუსის შეცვლა"
+            allowClear={false}
+            options={JOB_STATUS_ORDER.map((s) => ({ value: s, label: JOB_STATUS_LABELS[s] }))}
+          />
         </div>
         <div className="job-detail__actions">
           {job.status === "archived" ? (
