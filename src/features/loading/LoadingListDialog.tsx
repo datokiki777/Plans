@@ -22,11 +22,11 @@ function emptyDraft(): Draft {
   return { key: crypto.randomUUID(), name: "", note: "", quantity: "", doorInfo: "", checked: false };
 }
 
-const CATEGORIES: Array<{ key: LoadingCategory; label: string; hasName: boolean; hasDoor: boolean }> = [
-  { key: "trays", label: "შუშის თასები", hasName: false, hasDoor: false },
-  { key: "glass", label: "შუშა", hasName: false, hasDoor: true },
-  { key: "panels", label: "პანელები", hasName: true, hasDoor: false },
-  { key: "extras", label: "დამატებითი", hasName: true, hasDoor: false }
+const CATEGORIES: Array<{ key: LoadingCategory; label: string; hasName: boolean; hasNote: boolean; hasDoor: boolean }> = [
+  { key: "trays", label: "დუშთასე", hasName: false, hasNote: true, hasDoor: false },
+  { key: "glass", label: "შუშა", hasName: false, hasNote: true, hasDoor: true },
+  { key: "panels", label: "პანელები", hasName: true, hasNote: false, hasDoor: false },
+  { key: "extras", label: "დამატებითი", hasName: true, hasNote: false, hasDoor: false }
 ];
 
 export interface LoadingListDialogProps {
@@ -158,19 +158,22 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
                   onChange={(e) => patchRow(cat.key, draft.key, { name: e.target.value })}
                 />
               )}
-              <Input
-                className="loading-dialog__note"
-                placeholder="შენიშვნა"
-                value={draft.note}
-                onChange={(e) => patchRow(cat.key, draft.key, { note: e.target.value })}
-              />
-              {cat.hasDoor && (
+              {cat.hasNote && (
                 <Input
-                  className="loading-dialog__door"
-                  placeholder="კარი"
-                  value={draft.doorInfo}
-                  onChange={(e) => patchRow(cat.key, draft.key, { doorInfo: e.target.value })}
+                  className="loading-dialog__note"
+                  value={draft.note}
+                  onChange={(e) => patchRow(cat.key, draft.key, { note: e.target.value })}
                 />
+              )}
+              {cat.hasDoor && (
+                <div className="loading-dialog__door-field">
+                  <span className="loading-dialog__door-label">კარი</span>
+                  <Input
+                    className="loading-dialog__door"
+                    value={draft.doorInfo}
+                    onChange={(e) => patchRow(cat.key, draft.key, { doorInfo: e.target.value })}
+                  />
+                </div>
               )}
               {cat.hasName && (
                 <Input
