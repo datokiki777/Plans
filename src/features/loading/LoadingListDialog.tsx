@@ -22,6 +22,28 @@ function emptyDraft(): Draft {
   return { key: crypto.randomUUID(), name: "", note: "", quantity: "", doorInfo: "", checked: false };
 }
 
+/** A persistent label above the field (matches the existing "კარი" pattern) -
+ * unlike a placeholder, this stays visible once the user has typed
+ * something, so it's still clear what each field is for. */
+function LabeledField({
+  label,
+  className,
+  value,
+  onChange
+}: {
+  label: string;
+  className?: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="loading-dialog__field">
+      <span className="loading-dialog__field-label">{label}</span>
+      <Input className={className} value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
 const CATEGORIES: Array<{ key: LoadingCategory; label: string; hasName: boolean; hasNote: boolean; hasDoor: boolean }> = [
   { key: "trays", label: "დუშთასე", hasName: false, hasNote: true, hasDoor: false },
   { key: "glass", label: "შუშა", hasName: false, hasNote: true, hasDoor: true },
@@ -147,37 +169,35 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
             <div key={draft.key} className="loading-dialog__row">
               <div className="loading-dialog__fields">
                 {cat.hasName && (
-                  <Input
+                  <LabeledField
+                    label="დასახელება"
                     className="loading-dialog__name"
-                    placeholder="დასახელება"
                     value={draft.name}
-                    onChange={(e) => patchRow(cat.key, draft.key, { name: e.target.value })}
+                    onChange={(v) => patchRow(cat.key, draft.key, { name: v })}
                   />
                 )}
                 {cat.hasNote && (
-                  <Input
+                  <LabeledField
+                    label={cat.label}
                     className="loading-dialog__note"
-                    placeholder={cat.label}
                     value={draft.note}
-                    onChange={(e) => patchRow(cat.key, draft.key, { note: e.target.value })}
+                    onChange={(v) => patchRow(cat.key, draft.key, { note: v })}
                   />
                 )}
                 {cat.hasDoor && (
-                  <div className="loading-dialog__door-field">
-                    <span className="loading-dialog__door-label">კარი</span>
-                    <Input
-                      className="loading-dialog__door"
-                      value={draft.doorInfo}
-                      onChange={(e) => patchRow(cat.key, draft.key, { doorInfo: e.target.value })}
-                    />
-                  </div>
+                  <LabeledField
+                    label="კარი"
+                    className="loading-dialog__door"
+                    value={draft.doorInfo}
+                    onChange={(v) => patchRow(cat.key, draft.key, { doorInfo: v })}
+                  />
                 )}
                 {cat.hasName && (
-                  <Input
+                  <LabeledField
+                    label="რაოდენობა"
                     className="loading-dialog__qty"
-                    placeholder="რაოდ."
                     value={draft.quantity}
-                    onChange={(e) => patchRow(cat.key, draft.key, { quantity: e.target.value })}
+                    onChange={(v) => patchRow(cat.key, draft.key, { quantity: v })}
                   />
                 )}
               </div>
