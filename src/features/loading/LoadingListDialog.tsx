@@ -157,6 +157,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
                 {cat.hasNote && (
                   <Input
                     className="loading-dialog__note"
+                    placeholder={cat.label}
                     value={draft.note}
                     onChange={(e) => patchRow(cat.key, draft.key, { note: e.target.value })}
                   />
