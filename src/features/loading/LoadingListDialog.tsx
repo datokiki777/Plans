@@ -145,39 +145,41 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
           <h3>{cat.label}</h3>
           {drafts[cat.key as "trays"].map((draft) => (
             <div key={draft.key} className="loading-dialog__row">
-              {cat.hasName && (
-                <Input
-                  className="loading-dialog__name"
-                  placeholder="დასახელება"
-                  value={draft.name}
-                  onChange={(e) => patchRow(cat.key, draft.key, { name: e.target.value })}
-                />
-              )}
-              {cat.hasNote && (
-                <Input
-                  className="loading-dialog__note"
-                  value={draft.note}
-                  onChange={(e) => patchRow(cat.key, draft.key, { note: e.target.value })}
-                />
-              )}
-              {cat.hasDoor && (
-                <div className="loading-dialog__door-field">
-                  <span className="loading-dialog__door-label">კარი</span>
+              <div className="loading-dialog__fields">
+                {cat.hasName && (
                   <Input
-                    className="loading-dialog__door"
-                    value={draft.doorInfo}
-                    onChange={(e) => patchRow(cat.key, draft.key, { doorInfo: e.target.value })}
+                    className="loading-dialog__name"
+                    placeholder="დასახელება"
+                    value={draft.name}
+                    onChange={(e) => patchRow(cat.key, draft.key, { name: e.target.value })}
                   />
-                </div>
-              )}
-              {cat.hasName && (
-                <Input
-                  className="loading-dialog__qty"
-                  placeholder="რაოდ."
-                  value={draft.quantity}
-                  onChange={(e) => patchRow(cat.key, draft.key, { quantity: e.target.value })}
-                />
-              )}
+                )}
+                {cat.hasNote && (
+                  <Input
+                    className="loading-dialog__note"
+                    value={draft.note}
+                    onChange={(e) => patchRow(cat.key, draft.key, { note: e.target.value })}
+                  />
+                )}
+                {cat.hasDoor && (
+                  <div className="loading-dialog__door-field">
+                    <span className="loading-dialog__door-label">კარი</span>
+                    <Input
+                      className="loading-dialog__door"
+                      value={draft.doorInfo}
+                      onChange={(e) => patchRow(cat.key, draft.key, { doorInfo: e.target.value })}
+                    />
+                  </div>
+                )}
+                {cat.hasName && (
+                  <Input
+                    className="loading-dialog__qty"
+                    placeholder="რაოდ."
+                    value={draft.quantity}
+                    onChange={(e) => patchRow(cat.key, draft.key, { quantity: e.target.value })}
+                  />
+                )}
+              </div>
               <IconButton label="წაშლა" onClick={() => removeRow(cat.key, draft.key)}>
                 ×
               </IconButton>
