@@ -17,7 +17,12 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest}"],
         cleanupOutdatedCaches: true,
         clientsClaim: false, // do not take control immediately; avoids surprising an open tab mid-session
-        skipWaiting: false // update is applied only when the user confirms via the update prompt
+        skipWaiting: false, // update is applied only when the user confirms via the update prompt
+        // Bump this number to force every client onto a fresh update check,
+        // even ones that already dismissed an earlier update prompt - it
+        // changes sw.js's own bytes, so the browser's periodic byte-diff
+        // check finds a genuinely new service worker again.
+        cacheId: "plans-v2-2"
       },
       manifest: {
         name: "Plans",
