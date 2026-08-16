@@ -14,6 +14,8 @@ import { JOB_STATUS_LABELS, JOB_STATUS_ORDER, JOB_STATUS_TONES } from "@/entitie
 import type { Group } from "@/entities/group";
 import { formatDateOnly } from "@/shared/lib/date";
 import { JobForm } from "@/features/jobs/JobForm";
+import { JobShareCard } from "@/features/jobs/JobShareCard";
+import { useJobShare } from "@/features/jobs/useJobShare";
 import "./JobDetailPage.css";
 
 function DetailRow({ label, value }: { label: string; value?: string | string[] | null }) {
@@ -36,12 +38,8 @@ function DetailRow({ label, value }: { label: string; value?: string | string[] 
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const showToast = useToast();
-  const confirm = useConfirm();
   const [job, setJob] = useState<Job | null | undefined>(undefined);
   const [group, setGroup] = useState<Group | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
 
   const load = useCallback(() => {
     if (!id) return;
@@ -59,9 +57,19 @@ export default function JobDetailPage() {
     return <EmptyState title="სამუშაო ვერ მოიძებნა" description="შესაძლოა წაშლილია." />;
   }
 
+  return <JobDetailContent job={job} group={group} onReload={load} />;
+}
+
+function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | null; onReload: () => void }) {
+  const navigate = useNavigate();
+  const showToast = useToast();
+  const confirm = useConfirm();
+  const [editOpen, setEditOpen] = useState(false);
+  const { cardRef, sharing, share } = useJobShare(job);
+
   const handleStatusChange = async (next: JobStatus) => {
     await jobRepository.setStatus(job.id, next);
-    load();
+    onReload();
     showToast("სტატუსი განახლდა.", "ok");
   };
 
@@ -69,12 +77,24 @@ export default function JobDetailPage() {
     const ok = await confirm({ title: "სამუშაოს დაარქივება", message: "სამუშაო გადავა არქივში. მონაცემები არ წაიშლება.", danger: false });
     if (!ok) return;
     await jobRepository.archive(job.id);
-    load();
+    onReload();
   };
 
   const handleRestore = async () => {
     await jobRepository.restore(job.id);
-    load();
+    onReload();
+  };
+
+  const handleShare = async () => {
+    try {
+      const outcome = await share();
+      if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
+      else if (outcome === "downloaded-with-link-copied") showToast("სურათი ჩამოიტვირთა, Maps ლინკი დაკოპირდა — ჩასვი WhatsApp-ში.", "ok");
+      else if (outcome === "downloaded-only") showToast("სურათი ჩამოიტვირთა. ეს მოწყობილობა/ბრაუზერი პირდაპირ გაზიარებას ვერ უჭერს მხარს.", "warn");
+    } catch (error) {
+      console.error("Job share failed:", error);
+      showToast("გაზიარება ვერ განხორციელდა, სცადე თავიდან.", "warn");
+    }
   };
 
   return (
@@ -82,7 +102,14 @@ export default function JobDetailPage() {
       <PageHeader
         eyebrow="Plans"
         title={job.clientSnapshot.fullName || "უსახელო კლიენტი"}
-        actions={<Button onClick={() => setEditOpen(true)}>რედაქტირება</Button>}
+        actions={
+          <>
+            <Button onClick={() => void handleShare()} disabled={sharing}>
+              გაზიარება
+            </Button>
+            <Button onClick={() => setEditOpen(true)}>რედაქტირება</Button>
+          </>
+        }
       />
 
       <Card className="job-detail__status-card">
@@ -154,7 +181,10 @@ export default function JobDetailPage() {
         <DetailRow label="სამუშაო შენიშვნები" value={job.workNotes} />
       </Card>
 
-      <JobForm open={editOpen} onClose={() => setEditOpen(false)} job={job} onSaved={load} />
+      <JobForm open={editOpen} onClose={() => setEditOpen(false)} job={job} onSaved={onReload} />
+
+      {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
+      <JobShareCard ref={cardRef} job={job} groupName={group?.name} />
     </div>
   );
 }

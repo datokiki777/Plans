@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CznXPbDH.js";var t=e();function n({variant:e=`secondary`,className:n=``,type:r=`button`,...i}){return(0,t.jsx)(`button`,{type:r,className:`ui-button ui-button--${e} ${n}`.trim(),...i})}export{n as t};
