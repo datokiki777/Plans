@@ -22,7 +22,7 @@ export default defineConfig({
         // even ones that already dismissed an earlier update prompt - it
         // changes sw.js's own bytes, so the browser's periodic byte-diff
         // check finds a genuinely new service worker again.
-        cacheId: "plans-v2-10"
+        cacheId: "plans-v2-11"
       },
       manifest: {
         name: "Plans",

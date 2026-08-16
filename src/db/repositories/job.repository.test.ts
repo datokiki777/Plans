@@ -165,9 +165,9 @@ describe("LocalJobRepository", () => {
     expect((await jobs.list({ groupId: groupA.id })).length).toBe(2);
   });
 
-  it("search() matches non-archived jobs by client name or address, excludes archived", async () => {
+  it("search() matches jobs by client name or address, INCLUDING archived ones - per explicit request", async () => {
     const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
-    const match = await jobs.create(
+    const activeMatch = await jobs.create(
       blankJobInput({ clientId: client.id, status: "active", clientSnapshot: { fullName: "Giorgi Maisuradze", address: "Tbilisi", phone: "" } })
     );
     const archivedMatch = await jobs.create(
@@ -175,8 +175,33 @@ describe("LocalJobRepository", () => {
     );
 
     const results = await jobs.search("giorgi");
-    expect(results.map((j) => j.id)).toContain(match.id);
-    expect(results.map((j) => j.id)).not.toContain(archivedMatch.id);
+    expect(results.map((j) => j.id)).toContain(activeMatch.id);
+    expect(results.map((j) => j.id)).toContain(archivedMatch.id);
+  });
+
+  it("search() also matches by job date, in both raw (YYYY-MM-DD) and displayed (DD.MM.YYYY) form", async () => {
+    const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
+    const dated = await jobs.create(
+      blankJobInput({
+        clientId: client.id,
+        status: "active",
+        jobDate: "2026-08-15",
+        clientSnapshot: { fullName: "Unrelated Name", address: "", phone: "" }
+      })
+    );
+    const other = await jobs.create(
+      blankJobInput({ clientId: client.id, status: "active", jobDate: "2026-01-01", clientSnapshot: { fullName: "Other", address: "", phone: "" } })
+    );
+
+    const byRaw = await jobs.search("2026-08-15");
+    expect(byRaw.map((j) => j.id)).toEqual([dated.id]);
+
+    const byDisplayed = await jobs.search("15.08.2026");
+    expect(byDisplayed.map((j) => j.id)).toEqual([dated.id]);
+
+    const byPartialDisplayed = await jobs.search("08.2026");
+    expect(byPartialDisplayed.map((j) => j.id)).toContain(dated.id);
+    expect(byPartialDisplayed.map((j) => j.id)).not.toContain(other.id);
   });
 
   it("listByClient returns all jobs for a client regardless of status", async () => {

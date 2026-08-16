@@ -1,6 +1,7 @@
 import type { AppDatabase } from "@/db/database";
 import type { Job, JobStatus, NewJobInput } from "@/entities/job";
 import { createId, nowIso } from "@/shared/lib/id";
+import { formatDateOnly } from "@/shared/lib/date";
 
 export interface JobListFilter {
   status?: JobStatus;
@@ -88,12 +89,15 @@ export class LocalJobRepository implements JobRepository {
     if (!q) return [];
     const limit = opts.limit ?? 20;
     return this.db.jobs
-      .filter(
-        (job) =>
-          job.status !== "archived" &&
-          (job.clientSnapshot.fullName.toLocaleLowerCase("ka").includes(q) ||
-            job.clientSnapshot.address.toLocaleLowerCase("ka").includes(q))
-      )
+      .filter((job) => {
+        if (job.clientSnapshot.fullName.toLocaleLowerCase("ka").includes(q)) return true;
+        if (job.clientSnapshot.address.toLocaleLowerCase("ka").includes(q)) return true;
+        if (job.jobDate) {
+          if (job.jobDate.includes(q)) return true; // raw "YYYY-MM-DD"
+          if (formatDateOnly(job.jobDate).includes(q)) return true; // displayed "DD.MM.YYYY"
+        }
+        return false;
+      })
       .limit(limit)
       .toArray();
   }
