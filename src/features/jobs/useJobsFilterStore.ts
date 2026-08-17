@@ -16,11 +16,11 @@ interface JobsFilterState {
   setQuery: (query: string) => void;
 }
 
-/** Persisted to localStorage so the selected group survives closing and
- * reopening the app entirely, not just navigating within the same session -
- * per explicit request. Only groupId is persisted; tab/query reset each
- * session (not asked to persist, and a stale search query silently
- * filtering results on next open would be more surprising than useful). */
+/** Persisted to localStorage so the selected group AND status tab survive
+ * closing and reopening the app entirely, not just navigating within the
+ * same session - per explicit request. query is intentionally NOT
+ * persisted - a stale search query silently filtering results on next
+ * open would be more surprising than useful. */
 export const useJobsFilterStore = create<JobsFilterState>()(
   persist(
     (set) => ({
@@ -33,7 +33,7 @@ export const useJobsFilterStore = create<JobsFilterState>()(
     }),
     {
       name: "plans-jobs-filter",
-      partialize: (state) => ({ groupId: state.groupId })
+      partialize: (state) => ({ groupId: state.groupId, tab: state.tab })
     }
   )
 );

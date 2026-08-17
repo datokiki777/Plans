@@ -16,11 +16,14 @@ async function fetchByTab(tab: JobsListTab, groupId?: string): Promise<Job[]> {
   // "all" = active + archived combined, per the simplified Jobs page - not
   // literally every status (planned/completed jobs, if any, are not shown
   // here; they remain reachable/editable from the Job detail screen).
+  // Active jobs are always shown before archived ones (each block already
+  // sorted newest-jobDate-first by list() itself) - not merged into one
+  // global date sort, which would interleave the two statuses together.
   const [active, archived] = await Promise.all([
     jobRepository.list({ status: "active", groupId, limit: 100 }),
     jobRepository.list({ status: "archived", groupId, limit: 100 })
   ]);
-  return [...active, ...archived].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return [...active, ...archived];
 }
 
 export function useJobs(filter: JobsFilter) {
