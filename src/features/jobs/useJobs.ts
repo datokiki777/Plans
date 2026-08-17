@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { jobRepository } from "@/db/repositories";
+import { jobRepository as defaultJobRepository } from "@/db/repositories";
+import type { JobRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
+import { compareByJobDateAsc } from "@/entities/job";
 import type { JobsListTab } from "./useJobsFilterStore";
 
 export interface JobsFilter {
@@ -9,21 +11,29 @@ export interface JobsFilter {
   query?: string;
 }
 
-async function fetchByTab(tab: JobsListTab, groupId?: string): Promise<Job[]> {
+/** The Jobs page always shows nearest-scheduled-date first (ascending),
+ * regardless of tab - applied explicitly here rather than relying on
+ * JobRepository.list()'s generic default sort (which stays createdAt-desc,
+ * correct for other callers like Dashboard's "recently changed" list that
+ * have nothing to do with jobDate). `repo` is injectable (defaults to the
+ * app singleton) so this exact logic is directly testable against an
+ * isolated database, same pattern used elsewhere in the app. */
+export async function fetchJobsForTab(tab: JobsListTab, groupId?: string, repo: JobRepository = defaultJobRepository): Promise<Job[]> {
   if (tab === "active" || tab === "archived") {
-    return jobRepository.list({ status: tab, groupId, limit: 100 });
+    const result = await repo.list({ status: tab, groupId, limit: 100 });
+    return result.sort(compareByJobDateAsc);
   }
   // "all" = active + archived combined, per the simplified Jobs page - not
   // literally every status (planned/completed jobs, if any, are not shown
   // here; they remain reachable/editable from the Job detail screen).
-  // Active jobs are always shown before archived ones (each block already
-  // sorted newest-jobDate-first by list() itself) - not merged into one
-  // global date sort, which would interleave the two statuses together.
+  // Active jobs are always shown before archived ones (each block sorted
+  // independently, nearest-date-first) - not merged into one global sort,
+  // which would interleave the two statuses together.
   const [active, archived] = await Promise.all([
-    jobRepository.list({ status: "active", groupId, limit: 100 }),
-    jobRepository.list({ status: "archived", groupId, limit: 100 })
+    repo.list({ status: "active", groupId, limit: 100 }),
+    repo.list({ status: "archived", groupId, limit: 100 })
   ]);
-  return [...active, ...archived];
+  return [...active.sort(compareByJobDateAsc), ...archived.sort(compareByJobDateAsc)];
 }
 
 export function useJobs(filter: JobsFilter) {
@@ -35,7 +45,7 @@ export function useJobs(filter: JobsFilter) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const task = filter.query?.trim() ? jobRepository.search(filter.query) : fetchByTab(filter.tab, filter.groupId);
+    const task = filter.query?.trim() ? defaultJobRepository.search(filter.query) : fetchJobsForTab(filter.tab, filter.groupId);
     task.then((result) => {
       if (!cancelled) {
         setJobs(result);

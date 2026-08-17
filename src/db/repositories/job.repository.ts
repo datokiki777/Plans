@@ -2,7 +2,6 @@ import type { AppDatabase } from "@/db/database";
 import type { Job, JobStatus, NewJobInput } from "@/entities/job";
 import { createId, nowIso } from "@/shared/lib/id";
 import { formatDateOnly } from "@/shared/lib/date";
-import { compareByJobDateDesc } from "@/entities/job/sort";
 
 export interface JobListFilter {
   status?: JobStatus;
@@ -82,7 +81,7 @@ export class LocalJobRepository implements JobRepository {
     if (limit) collection = collection.limit(limit);
 
     const results = await collection.toArray();
-    return results.sort(compareByJobDateDesc);
+    return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   async search(query: string, opts: { limit?: number } = {}): Promise<Job[]> {

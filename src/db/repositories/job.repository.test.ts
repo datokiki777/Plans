@@ -152,21 +152,6 @@ describe("LocalJobRepository", () => {
     expect(result.map((j) => j.id)).toEqual([j2.id, j1.id]);
   });
 
-  it("list() sorts by jobDate (not createdAt) when jobs have a scheduled date", async () => {
-    const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
-    // Created in reverse chronological order of their jobDate, to prove
-    // sorting follows jobDate and not creation order.
-    const earlyDate = await jobs.create(
-      blankJobInput({ clientId: client.id, jobDate: "2026-01-01", clientSnapshot: { fullName: "x", address: "", phone: "" } })
-    );
-    const lateDate = await jobs.create(
-      blankJobInput({ clientId: client.id, jobDate: "2026-08-15", clientSnapshot: { fullName: "x", address: "", phone: "" } })
-    );
-
-    const result = await jobs.list();
-    expect(result.map((j) => j.id)).toEqual([lateDate.id, earlyDate.id]);
-  });
-
   it("list() filters by status and by group using indexed queries", async () => {
     const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
     const groupA = await groups.create({ name: "A" });
