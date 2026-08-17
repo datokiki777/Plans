@@ -108,7 +108,7 @@ export default function WorkersPage() {
 
       <div className="workers-page__list">
         {workers.map((w) => (
-          <Card key={w.id} className="workers-page__row">
+          <Card key={w.id} className={`workers-page__row${w.info.inside ? " workers-page__row--inside" : " workers-page__row--outside"}`}>
             <div className="workers-page__row-head">
               <strong>{w.name}</strong>
               <span className={`workers-page__status${w.info.inside ? "" : " workers-page__status--out"}`}>

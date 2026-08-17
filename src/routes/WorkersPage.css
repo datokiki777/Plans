@@ -36,6 +36,16 @@
   justify-content: space-between;
 }
 
+.workers-page__row--inside {
+  background: var(--color-brand-soft);
+  border-color: var(--color-brand);
+}
+
+.workers-page__row--outside {
+  background: var(--color-surface-soft);
+  border-color: var(--color-line);
+}
+
 .workers-page__status {
   font-size: var(--text-xs);
   font-weight: 700;

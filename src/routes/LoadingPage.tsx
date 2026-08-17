@@ -23,12 +23,6 @@ export default function LoadingPage() {
   const showToast = useToast();
   const { cardRef, activeList, activeItems, sharing, share } = useLoadingShare();
 
-  const handleDuplicate = async (list: LoadingList) => {
-    await loadingRepository.duplicateList(list.id);
-    reload();
-    showToast("სია დუბლირებულია.", "ok");
-  };
-
   const handleArchive = async (list: LoadingList) => {
     await loadingRepository.archiveList(list.id);
     reload();
@@ -83,7 +77,6 @@ export default function LoadingPage() {
             <div className="loading-page__row-actions">
               <ShareIconButton onClick={() => void handleShare(list)} disabled={sharing} />
               <Button onClick={() => setEditTarget(list)}>რედაქტირება</Button>
-              <Button onClick={() => void handleDuplicate(list)}>დუბლირება</Button>
               {list.archivedAt ? (
                 <Button onClick={() => void handleRestore(list)}>აღდგენა</Button>
               ) : (
