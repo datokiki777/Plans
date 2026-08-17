@@ -17,7 +17,7 @@ import { useJobShare } from "@/features/jobs/useJobShare";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import "./JobDetailPage.css";
 
-function DetailRow({ label, value }: { label: string; value?: string | string[] | null }) {
+function DetailRow({ label, value, highlight }: { label: string; value?: string | string[] | null; highlight?: boolean }) {
   if (!value || (Array.isArray(value) && value.length === 0)) return null;
   return (
     <div className="job-detail__row">
@@ -29,7 +29,7 @@ function DetailRow({ label, value }: { label: string; value?: string | string[] 
           ))}
         </ul>
       ) : (
-        <p className="job-detail__row-value">{value}</p>
+        <p className={`job-detail__row-value${highlight ? " job-detail__row-value--highlight" : ""}`}>{value}</p>
       )}
     </div>
   );
@@ -129,8 +129,8 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
       <Card className="job-detail__section">
         <h2 className="job-detail__section-title">სამუშაო</h2>
         <DetailRow label="ჯგუფი" value={group?.name} />
-        <DetailRow label="თარიღი" value={job.jobDate ? formatDateOnly(job.jobDate) : null} />
-        <DetailRow label="ხანგრძლივობა" value={job.jobDurationDays ? `${job.jobDurationDays} დღიანი` : null} />
+        <DetailRow label="თარიღი" value={job.jobDate ? formatDateOnly(job.jobDate) : null} highlight />
+        <DetailRow label="ხანგრძლივობა" value={job.jobDurationDays ? `${job.jobDurationDays} დღიანი` : null} highlight />
       </Card>
 
       <Card className="job-detail__section">

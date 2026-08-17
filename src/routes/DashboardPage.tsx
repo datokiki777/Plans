@@ -4,35 +4,67 @@ import { PageHeader } from "@/shared/ui/PageHeader";
 import { Card } from "@/shared/ui/Card";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { EmptyState } from "@/shared/ui/EmptyState";
-import { jobRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
+import { ShareIconButton } from "@/shared/ui/ShareIconButton";
+import { useToast } from "@/shared/ui/Toast";
+import { jobRepository, groupRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES } from "@/entities/job";
+import type { Group } from "@/entities/group";
 import { currentPeriodInfo } from "@/entities/stay";
 import type { LoadingList } from "@/entities/loading-list";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
+import { JobShareCard } from "@/features/jobs/JobShareCard";
+import { useJobShare } from "@/features/jobs/useJobShare";
 import "./DashboardPage.css";
 
 interface DashboardData {
   activeCount: number;
   upcoming: Job[];
   recent: Job[];
+  groupsById: Map<string, Group>;
   workersInside: number;
   workersUrgent: number;
   recentLoadingLists: LoadingList[];
 }
 
+function JobRow({ job, groupName, onShare, sharing }: { job: Job; groupName?: string; onShare: (job: Job) => void; sharing: boolean }) {
+  return (
+    <Card className="dashboard__row">
+      <Link to={`/jobs/${job.id}`} className="dashboard__row-link">
+        <div className="dashboard__row-head">
+          <strong>{job.clientSnapshot.fullName}</strong>
+          <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
+        </div>
+        <div className="dashboard__row-sub">
+          {job.jobDate && <span className="dashboard__row-meta">{formatDateOnly(job.jobDate)}</span>}
+          {groupName && <span className="dashboard__row-group">{groupName}</span>}
+        </div>
+      </Link>
+      <ShareIconButton
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onShare(job);
+        }}
+        disabled={sharing}
+      />
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const showToast = useToast();
+  const { cardRef, activeJob, sharing, share } = useJobShare();
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Every query below is bounded (indexed .where() + .count(), or a
-      // small .limit()) - never a full-table toArray() over every Job.
-      const [activeCount, activeJobs, recent, workers, recentLoadingLists] = await Promise.all([
+      const [activeCount, activeJobs, recent, groups, workers, recentLoadingLists] = await Promise.all([
         jobRepository.list({ status: "active" }).then((r) => r.length),
         jobRepository.list({ status: "active", limit: 50 }),
         jobRepository.list({ limit: 5 }),
+        groupRepository.list({ includeArchived: true }),
         workerRepository.list(),
         loadingRepository.listLists({ includeArchived: false })
       ]);
@@ -54,6 +86,7 @@ export default function DashboardPage() {
           activeCount,
           upcoming,
           recent,
+          groupsById: new Map(groups.map((g) => [g.id, g])),
           workersInside,
           workersUrgent,
           recentLoadingLists: recentLoadingLists.slice(0, 3)
@@ -66,6 +99,19 @@ export default function DashboardPage() {
   }, []);
 
   if (!data) return null;
+
+  const handleShare = async (job: Job) => {
+    try {
+      const outcome = await share(job);
+      if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
+      else if (outcome === "downloaded-with-link-copied") showToast("სურათი ჩამოიტვირთა, Maps ლინკი დაკოპირდა — ჩასვი WhatsApp-ში.", "ok");
+      else if (outcome === "downloaded-only")
+        showToast("სურათი ჩამოიტვირთა. ეს მოწყობილობა/ბრაუზერი პირდაპირ გაზიარებას ვერ უჭერს მხარს.", "warn");
+    } catch (error) {
+      console.error("Job share failed:", error);
+      showToast("გაზიარება ვერ განხორციელდა, სცადე თავიდან.", "warn");
+    }
+  };
 
   return (
     <div>
@@ -93,15 +139,13 @@ export default function DashboardPage() {
         ) : (
           <div className="dashboard__list">
             {data.upcoming.map((job) => (
-              <Link key={job.id} to={`/jobs/${job.id}`} className="dashboard__row">
-                <Card>
-                  <div className="dashboard__row-head">
-                    <strong>{job.clientSnapshot.fullName}</strong>
-                    <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
-                  </div>
-                  <span className="dashboard__row-meta">{formatDateOnly(job.jobDate)}</span>
-                </Card>
-              </Link>
+              <JobRow
+                key={job.id}
+                job={job}
+                groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
+                onShare={handleShare}
+                sharing={sharing}
+              />
             ))}
           </div>
         )}
@@ -111,14 +155,13 @@ export default function DashboardPage() {
         <h2>ბოლოს ცვლილი სამუშაოები</h2>
         <div className="dashboard__list">
           {data.recent.map((job) => (
-            <Link key={job.id} to={`/jobs/${job.id}`} className="dashboard__row">
-              <Card>
-                <div className="dashboard__row-head">
-                  <strong>{job.clientSnapshot.fullName}</strong>
-                  <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
-                </div>
-              </Card>
-            </Link>
+            <JobRow
+              key={job.id}
+              job={job}
+              groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
+              onShare={handleShare}
+              sharing={sharing}
+            />
           ))}
         </div>
       </section>
@@ -137,6 +180,9 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+
+      {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
+      <JobShareCard ref={cardRef} job={activeJob} />
     </div>
   );
 }

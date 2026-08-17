@@ -28,6 +28,11 @@
   margin: 0;
 }
 
+.job-detail__row-value--highlight {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
 .job-detail__row-list {
   margin: 0;
   padding-left: 18px;

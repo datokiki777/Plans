@@ -58,6 +58,7 @@
 
 .jobs-page__row-meta {
   margin-top: var(--space-1);
-  color: var(--color-muted);
+  color: var(--color-danger);
+  font-weight: 700;
   font-size: var(--text-sm);
 }
