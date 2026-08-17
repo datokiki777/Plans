@@ -38,7 +38,7 @@ export default function JobsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const { jobs, reload } = useJobs({ tab, groupId: groupId || undefined, query });
   const showToast = useToast();
-  const { cardRef, activeJob, activeGroupName, sharing, share } = useJobShare();
+  const { cardRef, activeJob, sharing, share } = useJobShare();
 
   useEffect(() => {
     groupRepository.list().then(setGroups);
@@ -46,8 +46,7 @@ export default function JobsPage() {
 
   const handleShare = async (job: Job) => {
     try {
-      const groupName = groups.find((g) => g.id === job.groupId)?.name ?? null;
-      const outcome = await share(job, groupName);
+      const outcome = await share(job);
       if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
       else if (outcome === "downloaded-with-link-copied") showToast("სურათი ჩამოიტვირთა, Maps ლინკი დაკოპირდა — ჩასვი WhatsApp-ში.", "ok");
       else if (outcome === "downloaded-only")
@@ -129,7 +128,7 @@ export default function JobsPage() {
       <JobForm open={formOpen} onClose={() => setFormOpen(false)} initialGroupId={groupId} onSaved={reload} />
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
-      <JobShareCard ref={cardRef} job={activeJob} groupName={activeGroupName} />
+      <JobShareCard ref={cardRef} job={activeJob} />
     </div>
   );
 }

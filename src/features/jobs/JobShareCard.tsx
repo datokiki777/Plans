@@ -5,7 +5,6 @@ import "./JobShareCard.css";
 
 export interface JobShareCardProps {
   job: Job | null;
-  groupName?: string | null;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -40,7 +39,7 @@ function ListField({ items }: { items: string[] }) {
 /** Same section layout/order as V1's buildPrintableReportContent, minus the
  * sketch (out of V2 scope). Every field/section is omitted entirely when
  * empty, matching V1's hasValue-driven omission. */
-export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(function JobShareCard({ job, groupName }, ref) {
+export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(function JobShareCard({ job }, ref) {
   if (!job) return <div ref={ref} className="job-share-card" />;
 
   const schedule = formatJobShareSchedule(job);
@@ -71,7 +70,6 @@ export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(functi
           <Field label="მისამართი" value={job.clientSnapshot.address} />
           <Field label="ტელეფონი" value={job.clientSnapshot.phone} />
           <Field label="სამუშაოს თარიღი" value={schedule} />
-          <Field label="ჯგუფი" value={groupName} />
         </Section>
       )}
 

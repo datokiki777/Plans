@@ -6,20 +6,20 @@ import { generateElementImageBlob, shareImage, type ShareOutcome } from "@/servi
 
 /** One reusable offscreen card + share flow. Works both for a single Job
  * screen (JobDetailPage) and a Jobs list (JobsPage) - each row's share
- * button just calls share(job, groupName) with whichever job it represents,
- * rather than needing one card mounted per row. */
+ * button just calls share(job) with whichever job it represents, rather
+ * than needing one card mounted per row. Group is intentionally never
+ * part of the shared image (per explicit request) - it's still used
+ * everywhere else in the app (filtering, data), just not shown here. */
 export function useJobShare() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [activeJob, setActiveJob] = useState<Job | null>(null);
-  const [activeGroupName, setActiveGroupName] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
 
-  const share = async (job: Job, groupName?: string | null): Promise<ShareOutcome> => {
+  const share = async (job: Job): Promise<ShareOutcome> => {
     setSharing(true);
     try {
       const client = await clientRepository.getById(job.clientId);
       setActiveJob(job);
-      setActiveGroupName(groupName ?? null);
       // Wait for the card to re-render with this job's data before
       // capturing it, plus the same short settle pause V1 used.
       await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -37,5 +37,5 @@ export function useJobShare() {
     }
   };
 
-  return { cardRef, activeJob, activeGroupName, sharing, share };
+  return { cardRef, activeJob, sharing, share };
 }
