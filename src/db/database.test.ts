@@ -24,7 +24,7 @@ describe("AppDatabase", () => {
 
     await testDb.open();
 
-    expect(testDb.verno).toBe(2);
+    expect(testDb.verno).toBe(3);
     expect(testDb.tables.map((t) => t.name).sort()).toEqual(
       [
         "clients",
@@ -92,10 +92,11 @@ describe("AppDatabase", () => {
     openDatabases.push(upgraded);
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(2);
+    expect(upgraded.verno).toBe(3);
     const migratedJob = await upgraded.jobs.get("legacy-job-1");
     expect(migratedJob?.statusBeforeArchive).toBeNull();
     expect(migratedJob?.status).toBe("archived"); // untouched by the migration itself
+    expect(migratedJob?.seller).toBe(""); // backfilled by the version-3 upgrade in the same chain
   });
 
   it("can write and read a record in each table (basic round-trip)", async () => {
@@ -122,6 +123,7 @@ describe("AppDatabase", () => {
       clientId: "c1",
       groupId: "g1",
       status: "active" as const,
+      seller: "",
       statusBeforeArchive: null,
       jobDate: null,
       jobDurationDays: null,

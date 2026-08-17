@@ -127,6 +127,7 @@ export function transformV1ToV2(data: LegacyExport["data"]): TransformResult {
       groupId,
       status: report.archived ? "archived" : "active",
       statusBeforeArchive: null,
+      seller: "", // V1 has no equivalent concept
       jobDate: report.jobDate || null,
       jobDurationDays: parseDurationDays(report.jobDurationDays),
       packageType: report.packageType,

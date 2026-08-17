@@ -117,6 +117,7 @@ describe("runLegacyImport (against an isolated test database)", () => {
       clientId: "pre-existing",
       groupId: null,
       status: "active",
+      seller: "",
       statusBeforeArchive: null,
       jobDate: null,
       jobDurationDays: null,

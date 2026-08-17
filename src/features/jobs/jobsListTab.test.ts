@@ -24,6 +24,7 @@ describe('Jobs "all" tab semantics', () => {
     const base = {
       clientId: client.id,
       groupId: null,
+      seller: "",
       jobDate: null,
       jobDurationDays: null,
       packageType: "",

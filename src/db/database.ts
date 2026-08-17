@@ -68,6 +68,20 @@ export class AppDatabase extends Dexie {
           }
         });
     });
+
+    // Version 3: adds Job.seller (who sold/took the job) - free text,
+    // not indexed, so only an upgrade() backfill is needed, same pattern
+    // as version 2's statusBeforeArchive.
+    this.version(3).upgrade(async (tx) => {
+      await tx
+        .table("jobs")
+        .toCollection()
+        .modify((job: { seller?: unknown }) => {
+          if (job.seller === undefined) {
+            job.seller = "";
+          }
+        });
+    });
   }
 }
 

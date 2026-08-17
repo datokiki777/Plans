@@ -45,6 +45,7 @@ describe("job form transforms", () => {
   it("jobToFormValues -> jobFormToPersistedFields round-trips array fields and clientSnapshot correctly", () => {
     const original = {
       clientSnapshot: { fullName: "გიორგი მაისურაძე", address: "თბილისი", phone: "555111222" },
+      seller: "ნინო",
       groupId: "g1",
       jobDate: "2026-08-15",
       jobDurationDays: 2,
@@ -64,6 +65,7 @@ describe("job form transforms", () => {
     const roundTripped = jobFormToPersistedFields({ ...formValues, googleMapsLink: "" });
     expect(roundTripped.clientSnapshot).toEqual(original.clientSnapshot);
     expect(roundTripped).toMatchObject({
+      seller: original.seller,
       groupId: original.groupId,
       jobDate: original.jobDate,
       jobDurationDays: original.jobDurationDays,

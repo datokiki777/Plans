@@ -114,6 +114,7 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
       <Card className="job-detail__section">
         <h2 className="job-detail__section-title">საკონტაქტო ინფორმაცია</h2>
         <DetailRow label="სახელი" value={job.clientSnapshot.fullName} />
+        <DetailRow label="გამყიდველი" value={job.seller} />
         <DetailRow label="მისამართი" value={job.clientSnapshot.address} />
         {job.clientSnapshot.phone && (
           <div className="job-detail__row">

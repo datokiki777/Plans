@@ -7,6 +7,23 @@
   flex: 1 1 auto;
 }
 
+/* Compact - a long form with ~20 fields doesn't need full-size input
+ * heights everywhere; smaller fields fit far more on screen at once. */
+.job-form .ui-field,
+.job-form .select-field {
+  min-height: 36px;
+  padding: 5px 10px;
+  font-size: var(--text-sm);
+}
+
+.job-form textarea.ui-field {
+  min-height: 60px;
+}
+
+.job-form .ui-form-field {
+  margin-bottom: var(--space-2);
+}
+
 .job-form__two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;

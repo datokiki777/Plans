@@ -36,6 +36,11 @@ export interface Job {
    * MIGRATION_PLAN.md §5. */
   statusBeforeArchive: PreArchiveJobStatus | null;
 
+  /** Who sold/took this job - a free-text name, entered directly on the Job
+   * form. Not part of clientSnapshot (it's about the seller, not the
+   * customer) - added in schema version 3, see db/database.ts. */
+  seller: string;
+
   jobDate: string | null; // "YYYY-MM-DD" or null
   jobDurationDays: number | null;
 

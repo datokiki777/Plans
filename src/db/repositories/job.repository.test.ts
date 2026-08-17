@@ -9,6 +9,7 @@ function blankJobInput(overrides: Partial<Job> & { clientId: string; clientSnaps
   return {
     groupId: null,
     status: "planned" as const,
+    seller: "",
     jobDate: null,
     jobDurationDays: null,
     packageType: "",

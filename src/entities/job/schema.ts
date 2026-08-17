@@ -3,6 +3,7 @@ import { isDateOnlyString } from "@/shared/lib/date";
 
 export const jobFormSchema = z.object({
   fullName: z.string().trim().min(1, "სახელი აუცილებელია"),
+  seller: z.string().trim(),
   address: z.string().trim(),
   phone: z.string().trim(),
   googleMapsLink: z.string().trim(),
@@ -29,6 +30,7 @@ export type JobFormValues = z.infer<typeof jobFormSchema>;
 
 export const JOB_FORM_DEFAULTS: JobFormValues = {
   fullName: "",
+  seller: "",
   address: "",
   phone: "",
   googleMapsLink: "",
@@ -64,9 +66,12 @@ function linesToText(lines: string[]): string {
  * clientId is resolved separately since it depends on a dedup lookup, not
  * a pure transform). Name/address/phone map directly into clientSnapshot -
  * the form has no separate "client" step, matching the simplified model
- * (a Job's contact details ARE the form, not a picked reference). */
+ * (a Job's contact details ARE the form, not a picked reference). seller
+ * is a plain Job field (not part of clientSnapshot - it's about who sold
+ * the job, not the customer). */
 export function jobFormToPersistedFields(values: JobFormValues) {
   return {
+    seller: values.seller,
     groupId: values.groupId || null,
     jobDate: values.jobDate || null,
     jobDurationDays: values.jobDurationDays ? Number(values.jobDurationDays) : null,
@@ -90,6 +95,7 @@ export function jobFormToPersistedFields(values: JobFormValues) {
  * accurate as of when this Job was saved). */
 export function jobToFormValues(job: {
   clientSnapshot: { fullName: string; address: string; phone: string };
+  seller: string;
   groupId: string | null;
   jobDate: string | null;
   jobDurationDays: number | null;
@@ -107,6 +113,7 @@ export function jobToFormValues(job: {
 }): Omit<JobFormValues, "googleMapsLink"> {
   return {
     fullName: job.clientSnapshot.fullName,
+    seller: job.seller,
     address: job.clientSnapshot.address,
     phone: job.clientSnapshot.phone,
     groupId: job.groupId ?? "",

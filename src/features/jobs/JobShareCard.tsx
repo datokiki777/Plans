@@ -48,6 +48,7 @@ export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(functi
     hasShareValue(job.clientSnapshot.fullName) ||
     hasShareValue(job.clientSnapshot.address) ||
     hasShareValue(job.clientSnapshot.phone) ||
+    hasShareValue(job.seller) ||
     hasShareValue(schedule);
   const hasPackageSection = hasShareValue(job.packageType) || hasShareValue(job.showerTraySize) || hasShareValue(job.antiSlip);
   const hasMaterialsSection =
@@ -66,6 +67,7 @@ export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(functi
       {hasClientSection && (
         <Section title="საკონტაქტო ინფორმაცია">
           <Field label="სახელი" value={job.clientSnapshot.fullName} />
+          <Field label="გამყიდველი" value={job.seller} />
           <Field label="მისამართი" value={job.clientSnapshot.address} />
           <Field label="ტელეფონი" value={job.clientSnapshot.phone} />
           <Field label="სამუშაოს თარიღი" value={schedule} />

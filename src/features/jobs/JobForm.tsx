@@ -148,6 +148,9 @@ export function JobForm({ open, onClose, job, initialGroupId, onSaved }: JobForm
         <FormField label="სახელი და გვარი" error={errors.fullName?.message}>
           <Input {...register("fullName")} autoComplete="off" />
         </FormField>
+        <FormField label="გამყიდველი">
+          <Input {...register("seller")} autoComplete="off" />
+        </FormField>
         <div className="job-form__two-col">
           <FormField label="მისამართი">
             <Input {...register("address")} autoComplete="off" />
