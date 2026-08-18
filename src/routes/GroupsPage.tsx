@@ -47,7 +47,10 @@ export default function GroupsPage() {
 
   const handleDelete = async (id: string, name: string, jobCount: number) => {
     if (!canPermanentlyDeleteGroup(jobCount)) {
-      showToast(`„${name}“ ვერ წაიშლება სამუდამოდ - მასზეა მიბმული ${jobCount} სამუშაო. ჯერ დაარქივე.`, "warn");
+      showToast(
+        `„${name}“ ვერ წაიშლება სამუდამოდ - მასზეა მიბმული ${jobCount} სამუშაო (დაარქივებულებიც შედის ამ რიცხვში). დაარქივება ამას ვერ შველის - საჭიროა თითოეული სამუშაო წაშალო ან სხვა ჯგუფზე გადაანაწილო.`,
+        "warn"
+      );
       return;
     }
     const ok = await confirm({ title: "სამუდამო წაშლა", message: `„${name}“ სამუდამოდ წაიშლება. გავაგრძელოთ?` });
