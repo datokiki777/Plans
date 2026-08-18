@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Plans',
   webDir: 'dist',
   server: {
+    url: 'https://plans.dbuilder.eu',
     androidScheme: 'https'
   }
 };
