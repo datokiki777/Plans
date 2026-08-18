@@ -28,7 +28,6 @@ export const router = createBrowserRouter([
       { path: "templates", element: <TemplatesPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "settings/backup", element: <SettingsPage /> },
-      { path: "settings/legacy-import", element: <SettingsPage /> },
       { path: "*", element: <NotFoundPage /> }
     ]
   }
