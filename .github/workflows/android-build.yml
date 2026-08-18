@@ -1,8 +1,11 @@
 name: Build signed Android APK
 
+# Manual only - the PWA (plans.dbuilder.eu) already updates itself on every
+# push via the service worker, and the APK is just a static wrapper shell
+# around it. Rebuilding/re-signing an APK for every small web change isn't
+# needed - trigger this by hand (Actions tab -> this workflow -> Run
+# workflow) only when you actually want a fresh installable APK.
 on:
-  push:
-    branches: [main]
   workflow_dispatch: {}
 
 jobs:
