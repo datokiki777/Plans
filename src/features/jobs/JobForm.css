@@ -39,16 +39,16 @@
 }
 
 .job-form__field-with-button {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.job-form__field-with-button .ui-form-field {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .job-form__field-with-button .template-field-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.job-form__field-with-button .ui-form-field__label {
-  padding-right: 90px;
-  display: inline-block;
+  flex: 0 0 auto;
 }
