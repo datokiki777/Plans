@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Card } from "@/shared/ui/Card";
 import { Button } from "@/shared/ui/Button";
@@ -60,6 +60,7 @@ export default function JobDetailPage() {
 }
 
 function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | null; onReload: () => void }) {
+  const navigate = useNavigate();
   const showToast = useToast();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
@@ -75,6 +76,18 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
     if (!ok) return;
     await jobRepository.archive(job.id);
     onReload();
+  };
+
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: "სამუშაოს სამუდამო წაშლა",
+      message: `„${job.clientSnapshot.fullName || "ეს სამუშაო"}“ სამუდამოდ წაიშლება - ეს ქმედება ვერ გაუქმდება. თუ საკმარისია მისი დამალვა, გამოიყენე „დაარქივება“ ამის ნაცვლად.`,
+      danger: true
+    });
+    if (!ok) return;
+    await jobRepository.delete(job.id);
+    showToast("სამუშაო წაიშალა.", "ok");
+    navigate("/jobs");
   };
 
   const handleShare = async () => {
@@ -109,6 +122,9 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
           inactiveLabel="დაარქივებული"
           onToggle={() => void handleToggleStatus()}
         />
+        <Button variant="danger" onClick={() => void handleDelete()}>
+          სამუდამო წაშლა
+        </Button>
       </Card>
 
       <Card className="job-detail__section">

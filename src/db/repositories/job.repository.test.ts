@@ -211,4 +211,16 @@ describe("LocalJobRepository", () => {
     await jobs.create(blankJobInput({ clientId: client.id, status: "archived", clientSnapshot: { fullName: "x", address: "", phone: "" } }));
     expect((await jobs.listByClient(client.id)).length).toBe(2);
   });
+
+  it("delete() permanently removes a job - it no longer appears in list() or getById()", async () => {
+    const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
+    const job = await jobs.create(
+      blankJobInput({ clientId: client.id, status: "active", clientSnapshot: { fullName: "x", address: "", phone: "" } })
+    );
+
+    await jobs.delete(job.id);
+
+    expect(await jobs.getById(job.id)).toBeUndefined();
+    expect((await jobs.list()).map((j) => j.id)).not.toContain(job.id);
+  });
 });
