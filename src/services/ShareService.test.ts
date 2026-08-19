@@ -110,7 +110,9 @@ describe("shareImage - inside the native Capacitor app", () => {
     const outcome = await shareImage({ blob: makeBlob(), filename: "test.png", title: "Test", shareText: "https://maps.example/x" });
 
     expect(outcome).toBe("shared");
-    expect(Filesystem.writeFile).toHaveBeenCalledWith(expect.objectContaining({ path: "test.png", directory: "CACHE" }));
+    expect(Filesystem.writeFile).toHaveBeenCalledWith(
+      expect.objectContaining({ path: "test.png", directory: "CACHE", data: expect.any(Blob) })
+    );
     expect(Share.share).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Test", text: "https://maps.example/x", files: ["file:///cache/test.png"] })
     );

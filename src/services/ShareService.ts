@@ -49,18 +49,6 @@ function downloadBlob(blob: Blob, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1] ?? "");
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("ვერ წამოიკითხა სურათი"));
-    reader.readAsDataURL(blob);
-  });
-}
-
 /** Inside the Capacitor Android app, the WebView's Web Share API doesn't
  * reliably support sharing files (canShare({files}) is often unsupported
  * or silently ignores files even when it returns true) - it was falling
@@ -69,11 +57,14 @@ function blobToBase64(blob: Blob): Promise<string> {
  * bypassing the WebView's Web Share support entirely. The file has to be
  * written to disk first (the native Share API takes a file URI, not a
  * Blob) - written to the cache directory, which Android periodically
- * clears on its own. */
+ * clears on its own. Filesystem.writeFile takes the Blob directly (no
+ * manual base64 conversion) - base64 both costs time to compute and
+ * inflates the payload ~33% right before it has to cross the native
+ * bridge, which was most of the extra delay compared to the browser/PWA
+ * path. */
 async function shareNative({ blob, filename, title, shareText }: ShareImageParams): Promise<ShareOutcome> {
   const [{ Filesystem, Directory }, { Share }] = await Promise.all([import("@capacitor/filesystem"), import("@capacitor/share")]);
-  const base64 = await blobToBase64(blob);
-  const written = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
+  const written = await Filesystem.writeFile({ path: filename, data: blob, directory: Directory.Cache });
   try {
     await Share.share({ title, text: shareText, files: [written.uri] });
     return "shared";
