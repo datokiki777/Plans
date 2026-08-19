@@ -1,3 +1,5 @@
+import { Capacitor } from "@capacitor/core";
+
 export type ShareOutcome = "shared" | "downloaded-with-link-copied" | "downloaded-only" | "cancelled";
 
 /** Rasterizes a DOM node into a PNG blob via html2canvas - same library and
@@ -30,8 +32,43 @@ function downloadBlob(blob: Blob, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      resolve(result.split(",")[1] ?? "");
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("ვერ წამოიკითხა სურათი"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** Inside the Capacitor Android app, the WebView's Web Share API doesn't
+ * reliably support sharing files (canShare({files}) is often unsupported
+ * or silently ignores files even when it returns true) - it was falling
+ * back to a plain download instead of opening the share sheet. Capacitor's
+ * own Share plugin talks to Android's native share intent directly,
+ * bypassing the WebView's Web Share support entirely. The file has to be
+ * written to disk first (the native Share API takes a file URI, not a
+ * Blob) - written to the cache directory, which Android periodically
+ * clears on its own. */
+async function shareNative({ blob, filename, title, shareText }: ShareImageParams): Promise<ShareOutcome> {
+  const [{ Filesystem, Directory }, { Share }] = await Promise.all([import("@capacitor/filesystem"), import("@capacitor/share")]);
+  const base64 = await blobToBase64(blob);
+  const written = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
+  try {
+    await Share.share({ title, text: shareText, files: [written.uri] });
+    return "shared";
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/cancel/i.test(message)) return "cancelled";
+    throw error;
+  }
+}
+
 /**
- * Same fallback chain as V1's shareReport (js/app.js):
+ * Web/PWA fallback chain (same as V1's shareReport, js/app.js):
  * 1. Web Share API with the file, if the platform supports sharing files
  *    (Android Chrome / installed PWA - lets the user pick WhatsApp etc.).
  * 2. Otherwise, download the image and copy the share text (Maps link) to
@@ -40,7 +77,10 @@ function downloadBlob(blob: Blob, filename: string): void {
  * A user-cancelled share (AbortError) is reported as "cancelled", not an
  * error - the caller should not show a failure message for it.
  */
-export async function shareImage({ blob, filename, title, shareText }: ShareImageParams): Promise<ShareOutcome> {
+export async function shareImage(params: ShareImageParams): Promise<ShareOutcome> {
+  if (Capacitor.isNativePlatform()) return shareNative(params);
+
+  const { blob, filename, title, shareText } = params;
   const file = new File([blob], filename, { type: blob.type || "image/png" });
 
   if (navigator.canShare?.({ files: [file] })) {
