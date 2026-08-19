@@ -48,3 +48,26 @@
 .loading-dialog__row .ui-icon-button {
   margin-top: 2px;
 }
+
+.loading-dialog__insert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 2px auto;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.loading-dialog__insert:hover {
+  background: var(--color-brand);
+  color: #fff;
+}

@@ -44,6 +44,17 @@ function LabeledField({
   );
 }
 
+/** Small, icon-only "insert a new row here" control - lets a material be
+ * added between two existing entries so the order never has to be fixed
+ * up by hand afterward, not just appended at the end. */
+function InsertRowButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" className="loading-dialog__insert" onClick={onClick} aria-label="ჩამატება აქ">
+      +
+    </button>
+  );
+}
+
 const CATEGORIES: Array<{ key: LoadingCategory; label: string; hasName: boolean; hasNote: boolean; hasDoor: boolean }> = [
   { key: "trays", label: "დუშთასე", hasName: false, hasNote: true, hasDoor: false },
   { key: "glass", label: "შუშა", hasName: false, hasNote: true, hasDoor: true },
@@ -91,8 +102,12 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
     });
   }, [open, list]);
 
-  const addRow = (category: LoadingCategory) => {
-    setDrafts((prev) => ({ ...prev, [category]: [...prev[category as "trays"], emptyDraft()] }));
+  const insertRowAt = (category: LoadingCategory, index: number) => {
+    setDrafts((prev) => {
+      const list = [...prev[category as "trays"]];
+      list.splice(index, 0, emptyDraft());
+      return { ...prev, [category]: list };
+    });
   };
   const removeRow = (category: LoadingCategory, key: string) => {
     setDrafts((prev) => ({ ...prev, [category]: prev[category as "trays"].filter((d) => d.key !== key) }));
@@ -165,48 +180,51 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
       {CATEGORIES.map((cat) => (
         <div key={cat.key} className="loading-dialog__category">
           <h3>{cat.label}</h3>
-          {drafts[cat.key as "trays"].map((draft) => (
-            <div key={draft.key} className="loading-dialog__row">
-              <div className="loading-dialog__fields">
-                {cat.hasName && (
-                  <LabeledField
-                    label="დასახელება"
-                    className="loading-dialog__name"
-                    value={draft.name}
-                    onChange={(v) => patchRow(cat.key, draft.key, { name: v })}
-                  />
-                )}
-                {cat.hasNote && (
-                  <LabeledField
-                    label={cat.label}
-                    className="loading-dialog__note"
-                    value={draft.note}
-                    onChange={(v) => patchRow(cat.key, draft.key, { note: v })}
-                  />
-                )}
-                {cat.hasDoor && (
-                  <LabeledField
-                    label="კარი"
-                    className="loading-dialog__door"
-                    value={draft.doorInfo}
-                    onChange={(v) => patchRow(cat.key, draft.key, { doorInfo: v })}
-                  />
-                )}
-                {cat.hasName && (
-                  <LabeledField
-                    label="რაოდენობა"
-                    className="loading-dialog__qty"
-                    value={draft.quantity}
-                    onChange={(v) => patchRow(cat.key, draft.key, { quantity: v })}
-                  />
-                )}
+          <InsertRowButton onClick={() => insertRowAt(cat.key, 0)} />
+          {drafts[cat.key as "trays"].map((draft, index) => (
+            <div key={draft.key}>
+              <div className="loading-dialog__row">
+                <div className="loading-dialog__fields">
+                  {cat.hasName && (
+                    <LabeledField
+                      label="დასახელება"
+                      className="loading-dialog__name"
+                      value={draft.name}
+                      onChange={(v) => patchRow(cat.key, draft.key, { name: v })}
+                    />
+                  )}
+                  {cat.hasNote && (
+                    <LabeledField
+                      label={cat.label}
+                      className="loading-dialog__note"
+                      value={draft.note}
+                      onChange={(v) => patchRow(cat.key, draft.key, { note: v })}
+                    />
+                  )}
+                  {cat.hasDoor && (
+                    <LabeledField
+                      label="კარი"
+                      className="loading-dialog__door"
+                      value={draft.doorInfo}
+                      onChange={(v) => patchRow(cat.key, draft.key, { doorInfo: v })}
+                    />
+                  )}
+                  {cat.hasName && (
+                    <LabeledField
+                      label="რაოდენობა"
+                      className="loading-dialog__qty"
+                      value={draft.quantity}
+                      onChange={(v) => patchRow(cat.key, draft.key, { quantity: v })}
+                    />
+                  )}
+                </div>
+                <IconButton label="წაშლა" onClick={() => removeRow(cat.key, draft.key)}>
+                  ×
+                </IconButton>
               </div>
-              <IconButton label="წაშლა" onClick={() => removeRow(cat.key, draft.key)}>
-                ×
-              </IconButton>
+              <InsertRowButton onClick={() => insertRowAt(cat.key, index + 1)} />
             </div>
           ))}
-          <Button onClick={() => addRow(cat.key)}>+ დამატება</Button>
         </div>
       ))}
     </Dialog>
