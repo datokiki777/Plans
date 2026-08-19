@@ -182,47 +182,47 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
           <h3>{cat.label}</h3>
           <InsertRowButton onClick={() => insertRowAt(cat.key, 0)} />
           {drafts[cat.key as "trays"].map((draft, index) => (
-            <div key={draft.key}>
-              <div className="loading-dialog__row">
-                <div className="loading-dialog__fields">
-                  {cat.hasName && (
-                    <LabeledField
-                      label="დასახელება"
-                      className="loading-dialog__name"
-                      value={draft.name}
-                      onChange={(v) => patchRow(cat.key, draft.key, { name: v })}
-                    />
-                  )}
-                  {cat.hasNote && (
-                    <LabeledField
-                      label={cat.label}
-                      className="loading-dialog__note"
-                      value={draft.note}
-                      onChange={(v) => patchRow(cat.key, draft.key, { note: v })}
-                    />
-                  )}
-                  {cat.hasDoor && (
-                    <LabeledField
-                      label="კარი"
-                      className="loading-dialog__door"
-                      value={draft.doorInfo}
-                      onChange={(v) => patchRow(cat.key, draft.key, { doorInfo: v })}
-                    />
-                  )}
-                  {cat.hasName && (
-                    <LabeledField
-                      label="რაოდენობა"
-                      className="loading-dialog__qty"
-                      value={draft.quantity}
-                      onChange={(v) => patchRow(cat.key, draft.key, { quantity: v })}
-                    />
-                  )}
-                </div>
+            <div key={draft.key} className="loading-dialog__row">
+              <div className="loading-dialog__fields">
+                {cat.hasName && (
+                  <LabeledField
+                    label="დასახელება"
+                    className="loading-dialog__name"
+                    value={draft.name}
+                    onChange={(v) => patchRow(cat.key, draft.key, { name: v })}
+                  />
+                )}
+                {cat.hasNote && (
+                  <LabeledField
+                    label={cat.label}
+                    className="loading-dialog__note"
+                    value={draft.note}
+                    onChange={(v) => patchRow(cat.key, draft.key, { note: v })}
+                  />
+                )}
+                {cat.hasDoor && (
+                  <LabeledField
+                    label="კარი"
+                    className="loading-dialog__door"
+                    value={draft.doorInfo}
+                    onChange={(v) => patchRow(cat.key, draft.key, { doorInfo: v })}
+                  />
+                )}
+                {cat.hasName && (
+                  <LabeledField
+                    label="რაოდენობა"
+                    className="loading-dialog__qty"
+                    value={draft.quantity}
+                    onChange={(v) => patchRow(cat.key, draft.key, { quantity: v })}
+                  />
+                )}
+              </div>
+              <div className="loading-dialog__row-actions">
                 <IconButton label="წაშლა" onClick={() => removeRow(cat.key, draft.key)}>
                   ×
                 </IconButton>
+                <InsertRowButton onClick={() => insertRowAt(cat.key, index + 1)} />
               </div>
-              <InsertRowButton onClick={() => insertRowAt(cat.key, index + 1)} />
             </div>
           ))}
         </div>

@@ -46,7 +46,15 @@
 }
 
 .loading-dialog__row .ui-icon-button {
-  margin-top: 2px;
+  flex: 0 0 auto;
+}
+
+.loading-dialog__row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 0 0 auto;
 }
 
 .loading-dialog__insert {
@@ -55,7 +63,6 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  margin: 2px auto;
   border-radius: 999px;
   border: none;
   background: var(--color-brand-soft);
@@ -70,4 +77,10 @@
 .loading-dialog__insert:hover {
   background: var(--color-brand);
   color: #fff;
+}
+
+/* The lone insert button before the very first row (no delete button to
+ * stack under) still needs its own centered spacing. */
+.loading-dialog__category > .loading-dialog__insert {
+  margin: 2px auto var(--space-2);
 }
