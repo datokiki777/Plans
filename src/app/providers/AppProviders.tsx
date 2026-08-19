@@ -4,9 +4,11 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { ConfirmProvider } from "@/shared/ui/ConfirmDialog";
 import { ToastProvider } from "@/shared/ui/Toast";
 import { PwaUpdateProvider } from "./PwaUpdateProvider";
+import { useNativeResumeReload } from "./useNativeResumeReload";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const isNative = Capacitor.isNativePlatform();
+  useNativeResumeReload();
   return (
     <ErrorBoundary>
       <ToastProvider>
