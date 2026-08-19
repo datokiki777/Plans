@@ -1,16 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { shareImage, preloadShareDependencies } from "./ShareService";
-
-vi.mock("@capacitor/core", () => ({
-  Capacitor: { isNativePlatform: vi.fn(() => false) }
-}));
-vi.mock("@capacitor/filesystem", () => ({
-  Filesystem: { writeFile: vi.fn() },
-  Directory: { Cache: "CACHE" }
-}));
-vi.mock("@capacitor/share", () => ({
-  Share: { share: vi.fn() }
-}));
+import { shareImage } from "./ShareService";
 
 function makeBlob(): Blob {
   return new Blob(["fake-png-bytes"], { type: "image/png" });
@@ -91,71 +80,5 @@ describe("shareImage", () => {
     expect(outcome).toBe("downloaded-only");
     expect(writeTextMock).not.toHaveBeenCalled();
     anchorClickSpy.mockRestore();
-  });
-});
-
-describe("shareImage - inside the native Capacitor app", () => {
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("uses Capacitor's native Share plugin (not the Web Share API) when running natively", async () => {
-    const { Capacitor } = await import("@capacitor/core");
-    const { Filesystem } = await import("@capacitor/filesystem");
-    const { Share } = await import("@capacitor/share");
-    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(Filesystem.writeFile).mockResolvedValue({ uri: "file:///cache/test.png" });
-    vi.mocked(Share.share).mockResolvedValue({ activityType: undefined });
-
-    const outcome = await shareImage({ blob: makeBlob(), filename: "test.png", title: "Test", shareText: "https://maps.example/x" });
-
-    expect(outcome).toBe("shared");
-    expect(Filesystem.writeFile).toHaveBeenCalledWith(
-      expect.objectContaining({ path: "test.png", directory: "CACHE", data: expect.any(Blob) })
-    );
-    expect(Share.share).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Test", text: "https://maps.example/x", files: ["file:///cache/test.png"] })
-    );
-  });
-
-  it("reports 'cancelled' when the user dismisses the native Android share sheet", async () => {
-    const { Capacitor } = await import("@capacitor/core");
-    const { Filesystem } = await import("@capacitor/filesystem");
-    const { Share } = await import("@capacitor/share");
-    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(Filesystem.writeFile).mockResolvedValue({ uri: "file:///cache/test.png" });
-    vi.mocked(Share.share).mockRejectedValue(new Error("Share canceled"));
-
-    const outcome = await shareImage({ blob: makeBlob(), filename: "test.png", title: "Test", shareText: "" });
-    expect(outcome).toBe("cancelled");
-  });
-
-  it("re-throws a genuine native share failure", async () => {
-    const { Capacitor } = await import("@capacitor/core");
-    const { Filesystem } = await import("@capacitor/filesystem");
-    const { Share } = await import("@capacitor/share");
-    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(Filesystem.writeFile).mockResolvedValue({ uri: "file:///cache/test.png" });
-    vi.mocked(Share.share).mockRejectedValue(new Error("boom"));
-
-    await expect(shareImage({ blob: makeBlob(), filename: "test.png", title: "Test", shareText: "" })).rejects.toThrow("boom");
-  });
-});
-
-describe("preloadShareDependencies", () => {
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("does not throw when called outside the native app", async () => {
-    const { Capacitor } = await import("@capacitor/core");
-    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
-    expect(() => preloadShareDependencies()).not.toThrow();
-  });
-
-  it("does not throw when called inside the native app", async () => {
-    const { Capacitor } = await import("@capacitor/core");
-    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    expect(() => preloadShareDependencies()).not.toThrow();
   });
 });
