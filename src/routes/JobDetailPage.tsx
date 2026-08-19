@@ -104,16 +104,7 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
 
   return (
     <div>
-      <PageHeader
-        eyebrow="Plans"
-        title={job.clientSnapshot.fullName || "უსახელო სამუშაო"}
-        actions={
-          <>
-            <ShareIconButton onClick={() => void handleShare()} disabled={sharing} />
-            <Button onClick={() => setEditOpen(true)}>რედაქტირება</Button>
-          </>
-        }
-      />
+      <PageHeader eyebrow="Plans" title={job.clientSnapshot.fullName || "უსახელო სამუშაო"} />
 
       <Card className="job-detail__status-card">
         <StatusToggle
@@ -122,8 +113,10 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
           inactiveLabel="დაარქივებული"
           onToggle={() => void handleToggleStatus()}
         />
+        <ShareIconButton onClick={() => void handleShare()} disabled={sharing} />
+        <Button onClick={() => setEditOpen(true)}>რედაქტ.</Button>
         <Button variant="danger" onClick={() => void handleDelete()}>
-          სამუდამო წაშლა
+          წაშლა
         </Button>
       </Card>
 

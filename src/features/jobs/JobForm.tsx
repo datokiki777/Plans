@@ -243,7 +243,7 @@ export function JobForm({ open, onClose, job, initialGroupId, onSaved }: JobForm
 
         <h3 className="job-form__section-title">დამატებითი სამუშაოები და შენიშვნები</h3>
         <FormField label="დამატებითი სამუშაოები">
-          <Textarea rows={3} {...register("extraWorkText")} />
+          <Textarea rows={5} {...register("extraWorkText")} />
         </FormField>
         <FormField label="სამუშაო შენიშვნები">
           <Textarea rows={3} {...register("workNotesText")} />

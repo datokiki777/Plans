@@ -45,6 +45,6 @@
 
 .job-form__field-with-button .template-field-button {
   position: absolute;
-  top: 0;
+  top: 5px;
   right: 0;
 }
