@@ -2,6 +2,23 @@ import { Capacitor } from "@capacitor/core";
 
 export type ShareOutcome = "shared" | "downloaded-with-link-copied" | "downloaded-only" | "cancelled";
 
+/** Warms the share code path (html2canvas, plus the native Share/Filesystem
+ * plugins inside the APK) in the background as soon as a screen that offers
+ * sharing is opened - not waited on by anything. Without this, the actual
+ * share button had to fetch these chunks fresh over the network on first
+ * tap (the APK loads live from plans.dbuilder.eu, with no service-worker
+ * precache to fall back on inside the native app - see AppProviders), which
+ * showed up as a many-second delay before the share sheet appeared. Safe to
+ * call repeatedly; the browser/JS module cache dedupes it after the first
+ * successful load. */
+export function preloadShareDependencies(): void {
+  void import("html2canvas");
+  if (Capacitor.isNativePlatform()) {
+    void import("@capacitor/filesystem");
+    void import("@capacitor/share");
+  }
+}
+
 /** Rasterizes a DOM node into a PNG blob via html2canvas - same library and
  * same options (2x scale, white background, useCORS) V1 used for its
  * WhatsApp share image (generateReportImageBlob in js/app.js). Dynamically

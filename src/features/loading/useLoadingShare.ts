@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadingRepository } from "@/db/repositories";
 import type { LoadingList } from "@/entities/loading-list";
 import { buildLoadingShareFilename } from "@/entities/loading-list";
 import type { LoadingItem } from "@/entities/loading-item";
-import { generateElementImageBlob, shareImage, type ShareOutcome } from "@/services/ShareService";
+import { generateElementImageBlob, preloadShareDependencies, shareImage, type ShareOutcome } from "@/services/ShareService";
 
 /** Single reusable offscreen card + share flow for the whole Loading list
  * screen - each row's share button targets this one hook instance rather
@@ -13,6 +13,10 @@ export function useLoadingShare() {
   const [activeList, setActiveList] = useState<LoadingList | null>(null);
   const [activeItems, setActiveItems] = useState<LoadingItem[]>([]);
   const [sharing, setSharing] = useState(false);
+
+  useEffect(() => {
+    preloadShareDependencies();
+  }, []);
 
   const share = async (list: LoadingList): Promise<ShareOutcome> => {
     setSharing(true);

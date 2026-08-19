@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clientRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
 import { buildJobShareFilename, buildJobShareText } from "@/entities/job";
-import { generateElementImageBlob, shareImage, type ShareOutcome } from "@/services/ShareService";
+import { generateElementImageBlob, preloadShareDependencies, shareImage, type ShareOutcome } from "@/services/ShareService";
 
 /** One reusable offscreen card + share flow. Works both for a single Job
  * screen (JobDetailPage) and a Jobs list (JobsPage) - each row's share
@@ -14,6 +14,10 @@ export function useJobShare() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [activeJob, setActiveJob] = useState<Job | null>(null);
   const [sharing, setSharing] = useState(false);
+
+  useEffect(() => {
+    preloadShareDependencies();
+  }, []);
 
   const share = async (job: Job): Promise<ShareOutcome> => {
     setSharing(true);

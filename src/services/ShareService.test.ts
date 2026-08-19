@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { shareImage } from "./ShareService";
+import { shareImage, preloadShareDependencies } from "./ShareService";
 
 vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: vi.fn(() => false) }
@@ -137,5 +137,23 @@ describe("shareImage - inside the native Capacitor app", () => {
     vi.mocked(Share.share).mockRejectedValue(new Error("boom"));
 
     await expect(shareImage({ blob: makeBlob(), filename: "test.png", title: "Test", shareText: "" })).rejects.toThrow("boom");
+  });
+});
+
+describe("preloadShareDependencies", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("does not throw when called outside the native app", async () => {
+    const { Capacitor } = await import("@capacitor/core");
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+    expect(() => preloadShareDependencies()).not.toThrow();
+  });
+
+  it("does not throw when called inside the native app", async () => {
+    const { Capacitor } = await import("@capacitor/core");
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    expect(() => preloadShareDependencies()).not.toThrow();
   });
 });
