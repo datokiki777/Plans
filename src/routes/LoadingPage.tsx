@@ -10,6 +10,7 @@ import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { loadingRepository } from "@/db/repositories";
 import { useLoadingLists } from "@/features/loading/useLoadingLists";
 import { LoadingListDialog } from "@/features/loading/LoadingListDialog";
+import { LoadingListViewDialog } from "@/features/loading/LoadingListViewDialog";
 import { LoadingShareCard } from "@/features/loading/LoadingShareCard";
 import { useLoadingShare } from "@/features/loading/useLoadingShare";
 import type { LoadingList } from "@/entities/loading-list";
@@ -20,6 +21,7 @@ export default function LoadingPage() {
   const [includeArchived, setIncludeArchived] = useState(false);
   const { lists, reload } = useLoadingLists(query, { includeArchived });
   const [editTarget, setEditTarget] = useState<LoadingList | null | undefined>(undefined);
+  const [viewTarget, setViewTarget] = useState<LoadingList | null>(null);
   const showToast = useToast();
   const { cardRef, activeList, activeItems, sharing, share } = useLoadingShare();
 
@@ -70,10 +72,12 @@ export default function LoadingPage() {
       <div className="loading-page__list">
         {lists.map((list) => (
           <Card key={list.id} className="loading-page__row">
-            <div className="loading-page__row-head">
-              <strong>{list.title}</strong>
-              {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
-            </div>
+            <button type="button" className="loading-page__row-tap" onClick={() => setViewTarget(list)}>
+              <div className="loading-page__row-head">
+                <strong>{list.title}</strong>
+                {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
+              </div>
+            </button>
             <div className="loading-page__row-actions">
               <ShareIconButton onClick={() => void handleShare(list)} disabled={sharing} />
               <Button onClick={() => setEditTarget(list)}>რედაქტირება</Button>
@@ -89,6 +93,7 @@ export default function LoadingPage() {
         ))}
       </div>
 
+      <LoadingListViewDialog list={viewTarget} onClose={() => setViewTarget(null)} onEdit={(list) => setEditTarget(list)} />
       <LoadingListDialog open={editTarget !== undefined} onClose={() => setEditTarget(undefined)} list={editTarget} onSaved={reload} />
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}

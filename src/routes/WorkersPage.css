@@ -65,6 +65,29 @@
   font-size: var(--text-sm);
 }
 
+.workers-page__progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-surface-soft);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.workers-page__progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-brand);
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.workers-page__progress-fill--warn {
+  background: var(--color-warn);
+}
+
+.workers-page__progress-fill--danger {
+  background: var(--color-danger);
+}
+
 .workers-page__row-actions {
   display: flex;
   flex-wrap: wrap;

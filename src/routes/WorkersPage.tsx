@@ -129,6 +129,20 @@ export default function WorkersPage() {
               ) : null}
               <span>დაბრუნება: {formatDateOnly(w.info.backDate)}</span>
             </div>
+            {w.info.inside && w.info.remainingDays !== null && (
+              <div className="workers-page__progress" aria-hidden="true">
+                <div
+                  className={`workers-page__progress-fill${
+                    w.info.remainingDays <= 14
+                      ? " workers-page__progress-fill--danger"
+                      : w.info.remainingDays <= 30
+                        ? " workers-page__progress-fill--warn"
+                        : ""
+                  }`}
+                  style={{ width: `${Math.min(100, (w.info.elapsedDays / (w.info.elapsedDays + w.info.remainingDays)) * 100)}%` }}
+                />
+              </div>
+            )}
             <div className="workers-page__row-actions">
               {w.info.inside ? (
                 <Button variant="primary" onClick={() => openExitDialog(w)}>
