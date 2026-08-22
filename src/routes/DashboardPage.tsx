@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Card } from "@/shared/ui/Card";
@@ -8,7 +8,7 @@ import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { useToast } from "@/shared/ui/Toast";
 import { jobRepository, groupRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
-import { JOB_STATUS_LABELS, JOB_STATUS_TONES, isJobActiveToday } from "@/entities/job";
+import { JOB_STATUS_LABELS, JOB_STATUS_TONES, findHighlightDate, isJobHighlighted } from "@/entities/job";
 import type { Group } from "@/entities/group";
 import { currentPeriodInfo } from "@/entities/stay";
 import type { LoadingList } from "@/entities/loading-list";
@@ -25,11 +25,24 @@ interface DashboardData {
   workersInside: number;
   workersUrgent: number;
   recentLoadingLists: LoadingList[];
+  highlightDate: string | null;
 }
 
-function JobRow({ job, groupName, onShare, sharing, today }: { job: Job; groupName?: string; onShare: (job: Job) => void; sharing: boolean; today: string }) {
+function JobRow({
+  job,
+  groupName,
+  onShare,
+  sharing,
+  highlightDate
+}: {
+  job: Job;
+  groupName?: string;
+  onShare: (job: Job) => void;
+  sharing: boolean;
+  highlightDate: string | null;
+}) {
   return (
-    <Card className={`dashboard__row${isJobActiveToday(job, today) ? " dashboard__row--today" : ""}`}>
+    <Card className={`dashboard__row${isJobHighlighted(job, highlightDate) ? " dashboard__row--today" : ""}`}>
       <Link to={`/jobs/${job.id}`} className="dashboard__row-link">
         <div className="dashboard__row-head">
           <strong>{job.clientSnapshot.fullName}</strong>
@@ -56,15 +69,15 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const showToast = useToast();
   const { cardRef, activeJob, sharing, share } = useJobShare();
-  const today = useMemo(() => todayDateOnly(), []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [activeCount, activeJobs, recent, groups, workers, recentLoadingLists] = await Promise.all([
+      const [activeCount, activeJobs, recent, allJobsForHighlight, groups, workers, recentLoadingLists] = await Promise.all([
         jobRepository.list({ status: "active" }).then((r) => r.length),
         jobRepository.list({ status: "active", limit: 50 }),
         jobRepository.list({ limit: 5 }),
+        jobRepository.list({ limit: 300 }),
         groupRepository.list({ includeArchived: true }),
         workerRepository.list(),
         loadingRepository.listLists({ includeArchived: false })
@@ -75,6 +88,7 @@ export default function DashboardPage() {
         .filter((j) => j.jobDate && j.jobDate >= today)
         .sort((a, b) => (a.jobDate as string).localeCompare(b.jobDate as string))
         .slice(0, 5);
+      const highlightDate = findHighlightDate(allJobsForHighlight, today);
 
       const workerInfos = await Promise.all(
         workers.map(async (w) => currentPeriodInfo(await stayRepository.listByWorker(w.id)))
@@ -90,7 +104,8 @@ export default function DashboardPage() {
           groupsById: new Map(groups.map((g) => [g.id, g])),
           workersInside,
           workersUrgent,
-          recentLoadingLists: recentLoadingLists.slice(0, 3)
+          recentLoadingLists: recentLoadingLists.slice(0, 3),
+          highlightDate
         });
       }
     })();
@@ -146,7 +161,7 @@ export default function DashboardPage() {
                 groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
                 onShare={handleShare}
                 sharing={sharing}
-                today={today}
+                highlightDate={data.highlightDate}
               />
             ))}
           </div>
@@ -163,7 +178,7 @@ export default function DashboardPage() {
               groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
               onShare={handleShare}
               sharing={sharing}
-              today={today}
+              highlightDate={data.highlightDate}
             />
           ))}
         </div>

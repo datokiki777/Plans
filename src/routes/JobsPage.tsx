@@ -16,7 +16,7 @@ import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
 import { groupRepository, jobRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
-import { JOB_STATUS_LABELS, JOB_STATUS_TONES, isJobActiveToday, type Job } from "@/entities/job";
+import { JOB_STATUS_LABELS, JOB_STATUS_TONES, findHighlightDate, isJobHighlighted, type Job } from "@/entities/job";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
 import "./JobsPage.css";
 
@@ -35,7 +35,8 @@ export default function JobsPage() {
   const setQuery = useJobsFilterStore((s) => s.setQuery);
 
   const [groups, setGroups] = useState<Group[]>([]);
-  const [activeGroupIds, setActiveGroupIds] = useState<Set<string>>(new Set());
+  const [highlightGroupIds, setHighlightGroupIds] = useState<Set<string>>(new Set());
+  const [highlightDate, setHighlightDate] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const { jobs, reload } = useJobs({ tab, groupId: groupId || undefined, query });
   const showToast = useToast();
@@ -47,12 +48,17 @@ export default function JobsPage() {
   }, []);
 
   useEffect(() => {
-    // Determine which groups have work happening today, so the group
-    // picker can highlight them - independent of the current filter/tab,
-    // so it stays accurate no matter what's currently selected.
-    jobRepository.list({ status: "active", limit: 200 }).then((activeJobs) => {
-      const ids = new Set(activeJobs.filter((j) => isJobActiveToday(j, today)).map((j) => j.groupId).filter((id): id is string => id !== null));
-      setActiveGroupIds(ids);
+    // What's "next up" (today's work, or the nearest future date with any
+    // active work once today's is done/archived) - computed from every
+    // non-archived job, independent of the current filter/tab, so it stays
+    // accurate no matter what's currently selected/displayed.
+    jobRepository.list({ limit: 300 }).then((allJobs) => {
+      const date = findHighlightDate(allJobs, today);
+      setHighlightDate(date);
+      const ids = new Set(
+        allJobs.filter((j) => isJobHighlighted(j, date)).map((j) => j.groupId).filter((id): id is string => id !== null)
+      );
+      setHighlightGroupIds(ids);
     });
   }, [today, jobs]);
 
@@ -87,7 +93,7 @@ export default function JobsPage() {
           onChange={setGroupId}
           placeholder="ყველა ჯგუფი"
           title="ჯგუფის მიხედვით გაფილტვრა"
-          options={groups.map((g) => ({ value: g.id, label: g.name, highlight: activeGroupIds.has(g.id) }))}
+          options={groups.map((g) => ({ value: g.id, label: g.name, highlight: highlightGroupIds.has(g.id) }))}
         />
       </div>
 
@@ -112,7 +118,7 @@ export default function JobsPage() {
 
       <div className="jobs-page__list">
         {jobs.map((job) => (
-          <Card key={job.id} className={`jobs-page__row${isJobActiveToday(job, today) ? " jobs-page__row--today" : ""}`}>
+          <Card key={job.id} className={`jobs-page__row${isJobHighlighted(job, highlightDate) ? " jobs-page__row--today" : ""}`}>
             <Link to={`/jobs/${job.id}`} className="jobs-page__row-link">
               <div className="jobs-page__row-head">
                 <strong>{job.clientSnapshot.fullName || "უსახელო სამუშაო"}</strong>
