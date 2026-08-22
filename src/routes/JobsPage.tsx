@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { SearchInput } from "@/shared/ui/SearchInput";
@@ -14,10 +14,10 @@ import { useJobsFilterStore, type JobsListTab } from "@/features/jobs/useJobsFil
 import { JobForm } from "@/features/jobs/JobForm";
 import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
-import { groupRepository } from "@/db/repositories";
+import { groupRepository, jobRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
-import { JOB_STATUS_LABELS, JOB_STATUS_TONES, type Job } from "@/entities/job";
-import { formatDateOnly } from "@/shared/lib/date";
+import { JOB_STATUS_LABELS, JOB_STATUS_TONES, isJobActiveToday, type Job } from "@/entities/job";
+import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
 import "./JobsPage.css";
 
 const TABS: Array<{ label: string; value: JobsListTab }> = [
@@ -35,14 +35,26 @@ export default function JobsPage() {
   const setQuery = useJobsFilterStore((s) => s.setQuery);
 
   const [groups, setGroups] = useState<Group[]>([]);
+  const [activeGroupIds, setActiveGroupIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
   const { jobs, reload } = useJobs({ tab, groupId: groupId || undefined, query });
   const showToast = useToast();
   const { cardRef, activeJob, sharing, share } = useJobShare();
+  const today = useMemo(() => todayDateOnly(), []);
 
   useEffect(() => {
     groupRepository.list().then(setGroups);
   }, []);
+
+  useEffect(() => {
+    // Determine which groups have work happening today, so the group
+    // picker can highlight them - independent of the current filter/tab,
+    // so it stays accurate no matter what's currently selected.
+    jobRepository.list({ status: "active", limit: 200 }).then((activeJobs) => {
+      const ids = new Set(activeJobs.filter((j) => isJobActiveToday(j, today)).map((j) => j.groupId).filter((id): id is string => id !== null));
+      setActiveGroupIds(ids);
+    });
+  }, [today, jobs]);
 
   const handleShare = async (job: Job) => {
     try {
@@ -75,7 +87,7 @@ export default function JobsPage() {
           onChange={setGroupId}
           placeholder="ყველა ჯგუფი"
           title="ჯგუფის მიხედვით გაფილტვრა"
-          options={groups.map((g) => ({ value: g.id, label: g.name }))}
+          options={groups.map((g) => ({ value: g.id, label: g.name, highlight: activeGroupIds.has(g.id) }))}
         />
       </div>
 
@@ -100,7 +112,7 @@ export default function JobsPage() {
 
       <div className="jobs-page__list">
         {jobs.map((job) => (
-          <Card key={job.id} className="jobs-page__row">
+          <Card key={job.id} className={`jobs-page__row${isJobActiveToday(job, today) ? " jobs-page__row--today" : ""}`}>
             <Link to={`/jobs/${job.id}`} className="jobs-page__row-link">
               <div className="jobs-page__row-head">
                 <strong>{job.clientSnapshot.fullName || "უსახელო სამუშაო"}</strong>

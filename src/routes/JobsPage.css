@@ -38,6 +38,11 @@
   gap: var(--space-2);
 }
 
+.jobs-page__row--today {
+  background: var(--color-ok-soft);
+  border-color: var(--color-ok);
+}
+
 .jobs-page__row-link {
   flex: 1 1 auto;
   min-width: 0;

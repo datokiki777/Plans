@@ -1,0 +1,1 @@
+import{t as e}from"./domain-CEYIEODB.js";var t={planned:`დაგეგმილი`,active:`აქტიური`,completed:`დასრულებული`,archived:`დაარქივებული`},n={planned:`neutral`,active:`brand`,completed:`ok`,archived:`danger`};function r(t,n){if(!t.jobDate)return!1;let r=t.jobDurationDays&&t.jobDurationDays>0?t.jobDurationDays:1,i=e(t.jobDate,r-1);return n>=t.jobDate&&n<=i}export{t as n,n as r,r as t};

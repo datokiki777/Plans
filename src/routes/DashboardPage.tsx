@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Card } from "@/shared/ui/Card";
@@ -8,7 +8,7 @@ import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { useToast } from "@/shared/ui/Toast";
 import { jobRepository, groupRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
-import { JOB_STATUS_LABELS, JOB_STATUS_TONES } from "@/entities/job";
+import { JOB_STATUS_LABELS, JOB_STATUS_TONES, isJobActiveToday } from "@/entities/job";
 import type { Group } from "@/entities/group";
 import { currentPeriodInfo } from "@/entities/stay";
 import type { LoadingList } from "@/entities/loading-list";
@@ -27,9 +27,9 @@ interface DashboardData {
   recentLoadingLists: LoadingList[];
 }
 
-function JobRow({ job, groupName, onShare, sharing }: { job: Job; groupName?: string; onShare: (job: Job) => void; sharing: boolean }) {
+function JobRow({ job, groupName, onShare, sharing, today }: { job: Job; groupName?: string; onShare: (job: Job) => void; sharing: boolean; today: string }) {
   return (
-    <Card className="dashboard__row">
+    <Card className={`dashboard__row${isJobActiveToday(job, today) ? " dashboard__row--today" : ""}`}>
       <Link to={`/jobs/${job.id}`} className="dashboard__row-link">
         <div className="dashboard__row-head">
           <strong>{job.clientSnapshot.fullName}</strong>
@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const showToast = useToast();
   const { cardRef, activeJob, sharing, share } = useJobShare();
+  const today = useMemo(() => todayDateOnly(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,6 +146,7 @@ export default function DashboardPage() {
                 groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
                 onShare={handleShare}
                 sharing={sharing}
+                today={today}
               />
             ))}
           </div>
@@ -161,6 +163,7 @@ export default function DashboardPage() {
               groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
               onShare={handleShare}
               sharing={sharing}
+              today={today}
             />
           ))}
         </div>

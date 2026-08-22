@@ -1,1 +1,0 @@
-var e={planned:`დაგეგმილი`,active:`აქტიური`,completed:`დასრულებული`,archived:`დაარქივებული`},t={planned:`neutral`,active:`brand`,completed:`ok`,archived:`danger`};export{t as n,e as t};

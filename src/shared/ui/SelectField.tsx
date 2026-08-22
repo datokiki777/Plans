@@ -5,6 +5,10 @@ import "./SelectField.css";
 export interface SelectFieldOption {
   value: string;
   label: string;
+  /** Marks this option as noteworthy (e.g. a group with work happening
+   * today) - shown as a green tint both in the option list and on the
+   * trigger button when it's the current selection. */
+  highlight?: boolean;
 }
 
 export interface SelectFieldProps {
@@ -37,7 +41,12 @@ export function SelectField({
 
   return (
     <>
-      <button type="button" className="select-field" onClick={() => setOpen(true)} disabled={disabled}>
+      <button
+        type="button"
+        className={`select-field${current?.highlight ? " select-field--highlight" : ""}`}
+        onClick={() => setOpen(true)}
+        disabled={disabled}
+      >
         <span className={current ? "" : "select-field__placeholder"}>{current?.label ?? placeholder}</span>
         <span className="select-field__chevron" aria-hidden="true">
           ▾
@@ -61,7 +70,9 @@ export function SelectField({
             <button
               key={opt.value}
               type="button"
-              className={`select-field__option${value === opt.value ? " select-field__option--selected" : ""}`}
+              className={`select-field__option${value === opt.value ? " select-field__option--selected" : ""}${
+                opt.highlight ? " select-field__option--highlight" : ""
+              }`}
               onClick={() => {
                 onChange(opt.value);
                 setOpen(false);
