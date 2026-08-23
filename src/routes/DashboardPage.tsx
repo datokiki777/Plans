@@ -49,7 +49,12 @@ function JobRow({
           <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
         </div>
         <div className="dashboard__row-sub">
-          {job.jobDate && <span className="dashboard__row-meta">{formatDateOnly(job.jobDate)}</span>}
+          {job.jobDate && (
+            <span className="dashboard__row-meta">
+              {formatDateOnly(job.jobDate)}
+              {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
+            </span>
+          )}
           {groupName && <span className="dashboard__row-group">{groupName}</span>}
         </div>
       </Link>

@@ -35,6 +35,7 @@ export default function JobsPage() {
   const setQuery = useJobsFilterStore((s) => s.setQuery);
 
   const [groups, setGroups] = useState<Group[]>([]);
+  const groupsById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
   const [highlightGroupIds, setHighlightGroupIds] = useState<Set<string>>(new Set());
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -124,10 +125,15 @@ export default function JobsPage() {
                 <strong>{job.clientSnapshot.fullName || "უსახელო სამუშაო"}</strong>
                 <StatusBadge label={JOB_STATUS_LABELS[job.status]} tone={JOB_STATUS_TONES[job.status]} />
               </div>
-              <p className="jobs-page__row-meta">
-                {formatDateOnly(job.jobDate)}
-                {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
-              </p>
+              <div className="jobs-page__row-sub">
+                <p className="jobs-page__row-meta">
+                  {formatDateOnly(job.jobDate)}
+                  {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
+                </p>
+                {job.groupId && groupsById.get(job.groupId) && (
+                  <span className="jobs-page__row-group">{groupsById.get(job.groupId)?.name}</span>
+                )}
+              </div>
             </Link>
             <div className="jobs-page__row-actions">
               <ShareIconButton
