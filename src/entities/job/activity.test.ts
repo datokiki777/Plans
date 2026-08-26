@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isJobActiveToday, findHighlightDate, isJobHighlighted } from "./activity";
+import { isJobActiveToday, findHighlightDate, isJobHighlighted, computeGroupHighlightDates, isJobRowHighlighted } from "./activity";
 
 describe("isJobActiveToday", () => {
   it("is false when there's no jobDate", () => {
@@ -74,5 +74,56 @@ describe("isJobHighlighted", () => {
   it("is false when there is no highlight date at all", () => {
     const job = { jobDate: "2026-08-25", jobDurationDays: 2, status: "active" as const };
     expect(isJobHighlighted(job, null)).toBe(false);
+  });
+});
+
+describe("computeGroupHighlightDates - the exact reported bug", () => {
+  it("group A having work today does not block group B's own upcoming day from being found", () => {
+    const jobs = [
+      { groupId: "A", jobDate: "2026-08-23", jobDurationDays: 1, status: "active" as const }, // A: today
+      { groupId: "B", jobDate: "2026-08-24", jobDurationDays: 1, status: "active" as const } // B: tomorrow, nothing today
+    ];
+    const dates = computeGroupHighlightDates(jobs, "2026-08-23");
+    expect(dates.get("A")).toBe("2026-08-23");
+    expect(dates.get("B")).toBe("2026-08-24"); // previously: undefined (the bug)
+  });
+
+  it("a third group with nothing scheduled at all gets no entry", () => {
+    const jobs = [
+      { groupId: "A", jobDate: "2026-08-23", jobDurationDays: 1, status: "active" as const },
+      { groupId: "C", jobDate: "2026-08-10", jobDurationDays: 1, status: "archived" as const } // fully in the past, archived
+    ];
+    const dates = computeGroupHighlightDates(jobs, "2026-08-23");
+    expect(dates.has("C")).toBe(false);
+  });
+
+  it("ignores jobs with no group entirely", () => {
+    const jobs = [{ groupId: null, jobDate: "2026-08-23", jobDurationDays: 1, status: "active" as const }];
+    expect(computeGroupHighlightDates(jobs, "2026-08-23").size).toBe(0);
+  });
+});
+
+describe("isJobRowHighlighted", () => {
+  it("checks a grouped job against its OWN group's date, not a shared one", () => {
+    const groupDates = new Map([
+      ["A", "2026-08-23"],
+      ["B", "2026-08-24"]
+    ]);
+    const jobA = { groupId: "A", jobDate: "2026-08-23", jobDurationDays: 1, status: "active" as const };
+    const jobB = { groupId: "B", jobDate: "2026-08-24", jobDurationDays: 1, status: "active" as const };
+    expect(isJobRowHighlighted(jobA, groupDates, "2026-08-23")).toBe(true);
+    expect(isJobRowHighlighted(jobB, groupDates, "2026-08-23")).toBe(true); // matches B's own date, not "today"
+  });
+
+  it("an ungrouped job is checked against today directly", () => {
+    const job = { groupId: null, jobDate: "2026-08-23", jobDurationDays: 1, status: "active" as const };
+    expect(isJobRowHighlighted(job, new Map(), "2026-08-23")).toBe(true);
+    expect(isJobRowHighlighted(job, new Map(), "2026-08-22")).toBe(false);
+  });
+
+  it("never highlights an archived job, even if it matches its group's date", () => {
+    const groupDates = new Map([["A", "2026-08-23"]]);
+    const job = { groupId: "A", jobDate: "2026-08-23", jobDurationDays: 1, status: "archived" as const };
+    expect(isJobRowHighlighted(job, groupDates, "2026-08-23")).toBe(false);
   });
 });
