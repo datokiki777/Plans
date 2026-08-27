@@ -5,6 +5,7 @@ import "./LoadingShareCard.css";
 export interface LoadingShareCardProps {
   title: string;
   items: LoadingItem[];
+  specialNote?: string;
 }
 
 function ordinalWord(n: number): string {
@@ -18,7 +19,10 @@ function bySortOrder(items: LoadingItem[]): LoadingItem[] {
 /** Same section set/order as V1's buildPrintableLoadingContent
  * (js/loading.js): trays, glass (+door), panels, extras. Empty categories
  * are omitted entirely, same as V1. */
-export const LoadingShareCard = forwardRef<HTMLDivElement, LoadingShareCardProps>(function LoadingShareCard({ title, items }, ref) {
+export const LoadingShareCard = forwardRef<HTMLDivElement, LoadingShareCardProps>(function LoadingShareCard(
+  { title, items, specialNote },
+  ref
+) {
   const trays = bySortOrder(items.filter((i) => i.category === "trays"));
   const glass = bySortOrder(items.filter((i) => i.category === "glass"));
   const panels = bySortOrder(items.filter((i) => i.category === "panels"));
@@ -83,6 +87,13 @@ export const LoadingShareCard = forwardRef<HTMLDivElement, LoadingShareCardProps
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {specialNote?.trim() && (
+        <section className="loading-share-card__special-note">
+          <h2>მნიშვნელოვანი შენიშვნა</h2>
+          <p>{specialNote.trim()}</p>
         </section>
       )}
     </div>

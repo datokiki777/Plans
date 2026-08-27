@@ -24,7 +24,7 @@ describe("AppDatabase", () => {
 
     await testDb.open();
 
-    expect(testDb.verno).toBe(3);
+    expect(testDb.verno).toBe(4);
     expect(testDb.tables.map((t) => t.name).sort()).toEqual(
       [
         "clients",
@@ -92,11 +92,46 @@ describe("AppDatabase", () => {
     openDatabases.push(upgraded);
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(3);
+    expect(upgraded.verno).toBe(4);
     const migratedJob = await upgraded.jobs.get("legacy-job-1");
     expect(migratedJob?.statusBeforeArchive).toBeNull();
     expect(migratedJob?.status).toBe("archived"); // untouched by the migration itself
     expect(migratedJob?.seller).toBe(""); // backfilled by the version-3 upgrade in the same chain
+  });
+
+  it("migrates an existing pre-version-4 database: backfills LoadingList.specialNote on real upgrade", async () => {
+    const dbName = `test-migration-loadinglist-${crypto.randomUUID()}`;
+
+    const legacyDb = new Dexie(dbName);
+    legacyDb.version(1).stores({
+      clients: "id, fullName, archivedAt",
+      jobs: "id, clientId, groupId, status, jobDate, [groupId+status]",
+      groups: "id, name, archivedAt",
+      fieldTemplates: "id, fieldKey, [fieldKey+sortOrder]",
+      loadingLists: "id, archivedAt",
+      loadingItems: "id, loadingListId, [loadingListId+category]",
+      workers: "id, archivedAt",
+      stays: "id, workerId, [workerId+entryDate]",
+      migrationRecords: "id, sourceExportId"
+    });
+    await legacyDb.open();
+    await legacyDb.table("loadingLists").add({
+      id: "legacy-list-1",
+      title: "Legacy List",
+      // no specialNote field at all - the real pre-migration shape
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      archivedAt: null
+    });
+    legacyDb.close();
+
+    const upgraded = new AppDatabase(dbName);
+    openDatabases.push(upgraded);
+    await upgraded.open();
+
+    const migratedList = await upgraded.loadingLists.get("legacy-list-1");
+    expect(migratedList?.specialNote).toBe("");
+    expect(migratedList?.title).toBe("Legacy List"); // untouched by the migration itself
   });
 
   it("can write and read a record in each table (basic round-trip)", async () => {

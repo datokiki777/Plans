@@ -79,6 +79,12 @@ export function LoadingListViewDialog({ list, onClose, onEdit }: LoadingListView
           );
         })}
         {items.length === 0 && <p className="loading-view__empty">ეს სია ჯერ ცარიელია.</p>}
+        {list.specialNote.trim() && (
+          <section className="loading-view__special-note">
+            <h3>მნიშვნელოვანი შენიშვნა</h3>
+            <p>{list.specialNote.trim()}</p>
+          </section>
+        )}
       </div>
     </Dialog>
   );

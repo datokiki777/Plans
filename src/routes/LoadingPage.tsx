@@ -97,7 +97,7 @@ export default function LoadingPage() {
       <LoadingListDialog open={editTarget !== undefined} onClose={() => setEditTarget(undefined)} list={editTarget} onSaved={reload} />
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
-      <LoadingShareCard ref={cardRef} title={activeList?.title ?? ""} items={activeItems} />
+      <LoadingShareCard ref={cardRef} title={activeList?.title ?? ""} items={activeItems} specialNote={activeList?.specialNote} />
     </div>
   );
 }

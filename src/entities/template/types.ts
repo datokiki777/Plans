@@ -9,7 +9,8 @@ export type TemplateFieldKey =
   | "panelColor"
   | "floorPanelColor"
   | "panelHeight"
-  | "installables";
+  | "installables"
+  | "loadingSpecialNote";
 
 export const TEMPLATE_FIELD_KEYS: readonly TemplateFieldKey[] = [
   "packageType",
@@ -20,7 +21,8 @@ export const TEMPLATE_FIELD_KEYS: readonly TemplateFieldKey[] = [
   "panelColor",
   "floorPanelColor",
   "panelHeight",
-  "installables"
+  "installables",
+  "loadingSpecialNote"
 ];
 
 /** Fields where picking a template appends a new value instead of replacing
@@ -40,7 +42,8 @@ export const TEMPLATE_FIELD_LABELS: Record<TemplateFieldKey, string> = {
   panelColor: "პანელის ფერი",
   floorPanelColor: "იატაკის პანელის ფერი",
   panelHeight: "პანელი სადამდე კეთდება",
-  installables: "დასაყენებლების სია"
+  installables: "დასაყენებლების სია",
+  loadingSpecialNote: "მნიშვნელოვანი შენიშვნა (დატვირთვა)"
 };
 
 export interface FieldTemplate {

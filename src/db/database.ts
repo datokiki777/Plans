@@ -82,6 +82,21 @@ export class AppDatabase extends Dexie {
           }
         });
     });
+
+    // Version 4: adds LoadingList.specialNote - a single, always-present,
+    // free-text field (not part of the repeatable items list) - not
+    // indexed, so only an upgrade() backfill is needed, same pattern as
+    // version 2/3.
+    this.version(4).upgrade(async (tx) => {
+      await tx
+        .table("loadingLists")
+        .toCollection()
+        .modify((list: { specialNote?: unknown }) => {
+          if (list.specialNote === undefined) {
+            list.specialNote = "";
+          }
+        });
+    });
   }
 }
 

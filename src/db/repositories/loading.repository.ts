@@ -8,6 +8,7 @@ export interface LoadingRepository {
   getList(id: string): Promise<LoadingList | undefined>;
   createList(input: NewLoadingListInput): Promise<LoadingList>;
   renameList(id: string, title: string): Promise<void>;
+  setSpecialNote(id: string, specialNote: string): Promise<void>;
   archiveList(id: string): Promise<void>;
   restoreList(id: string): Promise<void>;
   deleteList(id: string): Promise<void>;
@@ -44,13 +45,17 @@ export class LocalLoadingRepository implements LoadingRepository {
 
   async createList(input: NewLoadingListInput): Promise<LoadingList> {
     const now = nowIso();
-    const list: LoadingList = { id: createId(), ...input, createdAt: now, updatedAt: now, archivedAt: null };
+    const list: LoadingList = { specialNote: "", ...input, id: createId(), createdAt: now, updatedAt: now, archivedAt: null };
     await this.db.loadingLists.add(list);
     return list;
   }
 
   async renameList(id: string, title: string): Promise<void> {
     await this.db.loadingLists.update(id, { title, updatedAt: nowIso() });
+  }
+
+  async setSpecialNote(id: string, specialNote: string): Promise<void> {
+    await this.db.loadingLists.update(id, { specialNote, updatedAt: nowIso() });
   }
 
   async archiveList(id: string): Promise<void> {
@@ -65,7 +70,7 @@ export class LocalLoadingRepository implements LoadingRepository {
     const original = await this.getList(id);
     if (!original) throw new Error(`Loading list ${id} not found`);
     const items = await this.listItems(id);
-    const copy = await this.createList({ title: `${original.title} (ასლი)` });
+    const copy = await this.createList({ title: `${original.title} (ასლი)`, specialNote: original.specialNote });
     for (const item of items) {
       await this.addItem({
         loadingListId: copy.id,

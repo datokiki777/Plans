@@ -29,7 +29,7 @@ export interface JobFormProps {
 
 const DURATION_OPTIONS = ["1", "2", "3", "4", "5", "6", "7"];
 
-type SingleTemplateFieldName = Exclude<TemplateFieldKey, "glassPartitionSize" | "installables">;
+type SingleTemplateFieldName = Exclude<TemplateFieldKey, "glassPartitionSize" | "installables" | "loadingSpecialNote">;
 
 const SINGLE_TEMPLATE_FIELDS: SingleTemplateFieldName[] = [
   "packageType",

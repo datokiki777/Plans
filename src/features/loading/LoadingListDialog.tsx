@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Dialog } from "@/shared/ui/Dialog";
 import { Button } from "@/shared/ui/Button";
 import { IconButton } from "@/shared/ui/IconButton";
-import { Input } from "@/shared/ui/fields";
+import { Input, Textarea } from "@/shared/ui/fields";
 import { useToast } from "@/shared/ui/Toast";
 import { loadingRepository } from "@/db/repositories";
 import type { LoadingList } from "@/entities/loading-list";
 import type { LoadingCategory } from "@/entities/loading-item";
+import { useFieldTemplates } from "@/features/templates/useFieldTemplates";
+import { TemplateFieldButton } from "@/features/templates/TemplateFieldButton";
 import "./LoadingListDialog.css";
 
 interface Draft {
@@ -72,17 +74,21 @@ export interface LoadingListDialogProps {
 export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListDialogProps) {
   const showToast = useToast();
   const [title, setTitle] = useState("");
+  const [specialNote, setSpecialNote] = useState("");
   const [drafts, setDrafts] = useState<Record<LoadingCategory, Draft[]>>({ trays: [], glass: [], panels: [], extras: [] });
   const [saving, setSaving] = useState(false);
+  const { templates: specialNoteTemplates } = useFieldTemplates("loadingSpecialNote");
 
   useEffect(() => {
     if (!open) return;
     if (!list) {
       setTitle("");
+      setSpecialNote("");
       setDrafts({ trays: [], glass: [], panels: [], extras: [] });
       return;
     }
     setTitle(list.title);
+    setSpecialNote(list.specialNote);
     loadingRepository.listItems(list.id).then((items) => {
       const grouped: Record<LoadingCategory, Draft[]> = { trays: [], glass: [], panels: [], extras: [] };
       for (const item of items) {
@@ -129,10 +135,11 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
     try {
       let listId = list?.id ?? null;
       if (!listId) {
-        const created = await loadingRepository.createList({ title: trimmedTitle });
+        const created = await loadingRepository.createList({ title: trimmedTitle, specialNote: specialNote.trim() });
         listId = created.id;
       } else {
         await loadingRepository.renameList(listId, trimmedTitle);
+        await loadingRepository.setSpecialNote(listId, specialNote.trim());
         const existing = await loadingRepository.listItems(listId);
         await Promise.all(existing.map((it) => loadingRepository.deleteItem(it.id)));
       }
@@ -225,6 +232,20 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
               </div>
             </div>
           ))}
+          {cat.key === "extras" && (
+            <div className="loading-dialog__special-note">
+              <div className="loading-dialog__special-note-head">
+                <span className="loading-dialog__field-label">მნიშვნელოვანი შენიშვნა</span>
+                <TemplateFieldButton
+                  fieldKey="loadingSpecialNote"
+                  templates={specialNoteTemplates}
+                  value={specialNote}
+                  onChange={setSpecialNote}
+                />
+              </div>
+              <Textarea rows={2} value={specialNote} onChange={(e) => setSpecialNote(e.target.value)} />
+            </div>
+          )}
         </div>
       ))}
     </Dialog>
