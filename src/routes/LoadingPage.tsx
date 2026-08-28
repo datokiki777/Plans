@@ -6,6 +6,7 @@ import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { useToast } from "@/shared/ui/Toast";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { loadingRepository } from "@/db/repositories";
 import { useLoadingLists } from "@/features/loading/useLoadingLists";
@@ -23,6 +24,7 @@ export default function LoadingPage() {
   const [editTarget, setEditTarget] = useState<LoadingList | null | undefined>(undefined);
   const [viewTarget, setViewTarget] = useState<LoadingList | null>(null);
   const showToast = useToast();
+  const confirm = useConfirm();
   const { cardRef, activeList, activeItems, sharing, share } = useLoadingShare();
 
   const handleArchive = async (list: LoadingList) => {
@@ -32,6 +34,18 @@ export default function LoadingPage() {
 
   const handleRestore = async (list: LoadingList) => {
     await loadingRepository.restoreList(list.id);
+    reload();
+  };
+
+  const handleDelete = async (list: LoadingList) => {
+    const ok = await confirm({
+      title: "სიის სამუდამო წაშლა",
+      message: `„${list.title}“ სამუდამოდ წაიშლება - ეს ქმედება ვერ გაუქმდება.`,
+      danger: true
+    });
+    if (!ok) return;
+    await loadingRepository.deleteList(list.id);
+    showToast("სია წაიშალა.", "ok");
     reload();
   };
 
@@ -82,7 +96,12 @@ export default function LoadingPage() {
               <ShareIconButton onClick={() => void handleShare(list)} disabled={sharing} />
               <Button onClick={() => setEditTarget(list)}>რედაქტირება</Button>
               {list.archivedAt ? (
-                <Button onClick={() => void handleRestore(list)}>აღდგენა</Button>
+                <>
+                  <Button onClick={() => void handleRestore(list)}>აღდგენა</Button>
+                  <Button variant="danger" onClick={() => void handleDelete(list)}>
+                    სამუდამო წაშლა
+                  </Button>
+                </>
               ) : (
                 <Button variant="danger" onClick={() => void handleArchive(list)}>
                   დაარქივება
