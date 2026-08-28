@@ -29,6 +29,19 @@ export function findHighlightDate(jobs: Array<Pick<Job, "jobDate" | "jobDuration
   return futureDates.reduce((min, d) => (d < min ? d : min));
 }
 
+/** True when the job hasn't fully finished yet as of today - either it
+ * starts today or later, OR it started earlier but its duration means
+ * it's still ongoing (e.g. started 2 days ago, runs 3 days). Used for
+ * "upcoming work" lists, which should include currently-ongoing jobs, not
+ * just ones that haven't started yet - a job that's actively happening
+ * right now is at least as relevant as one starting tomorrow. */
+export function isJobUpcomingOrOngoing(job: Pick<Job, "jobDate" | "jobDurationDays">, today: string): boolean {
+  if (!job.jobDate) return false;
+  const days = job.jobDurationDays && job.jobDurationDays > 0 ? job.jobDurationDays : 1;
+  const lastDay = addDays(job.jobDate, days - 1);
+  return lastDay >= today;
+}
+
 /** Convenience combining findHighlightDate's result with the per-job
  * range check and an explicit archived guard (archived jobs never glow,
  * even if their date range happens to overlap the highlight date). */

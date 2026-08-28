@@ -8,7 +8,7 @@ import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { useToast } from "@/shared/ui/Toast";
 import { jobRepository, groupRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
-import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted } from "@/entities/job";
+import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted, isJobUpcomingOrOngoing } from "@/entities/job";
 import type { Group } from "@/entities/group";
 import { currentPeriodInfo } from "@/entities/stay";
 import type { LoadingList } from "@/entities/loading-list";
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
       const today = todayDateOnly();
       const upcoming = activeJobs
-        .filter((j) => j.jobDate && j.jobDate >= today)
+        .filter((j) => isJobUpcomingOrOngoing(j, today))
         .sort((a, b) => (a.jobDate as string).localeCompare(b.jobDate as string))
         .slice(0, 5);
       const groupHighlightDates = computeGroupHighlightDates(allJobsForHighlight, today);

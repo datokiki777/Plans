@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isJobActiveToday, findHighlightDate, isJobHighlighted, computeGroupHighlightDates, isJobRowHighlighted } from "./activity";
+import { isJobActiveToday, findHighlightDate, isJobHighlighted, computeGroupHighlightDates, isJobRowHighlighted, isJobUpcomingOrOngoing } from "./activity";
 
 describe("isJobActiveToday", () => {
   it("is false when there's no jobDate", () => {
@@ -125,5 +125,29 @@ describe("isJobRowHighlighted", () => {
     const groupDates = new Map([["A", "2026-08-23"]]);
     const job = { groupId: "A", jobDate: "2026-08-23", jobDurationDays: 1, status: "archived" as const };
     expect(isJobRowHighlighted(job, groupDates, "2026-08-23")).toBe(false);
+  });
+});
+
+describe("isJobUpcomingOrOngoing - the exact reported bug (Dashboard missing a currently-ongoing job)", () => {
+  it("includes a job that started in the past but is still ongoing today", () => {
+    // Willi Sporn: 27.08, 3 days -> spans 27/28/29. "Today" is 28th - it
+    // started yesterday but is still actively happening.
+    const job = { jobDate: "2026-08-27", jobDurationDays: 3 };
+    expect(isJobUpcomingOrOngoing(job, "2026-08-28")).toBe(true);
+  });
+
+  it("includes a job starting today or in the future", () => {
+    const job = { jobDate: "2026-08-28", jobDurationDays: 1 };
+    expect(isJobUpcomingOrOngoing(job, "2026-08-28")).toBe(true);
+    expect(isJobUpcomingOrOngoing(job, "2026-08-27")).toBe(true);
+  });
+
+  it("excludes a job that has fully finished (last day is before today)", () => {
+    const job = { jobDate: "2026-08-20", jobDurationDays: 3 }; // spans 20-22
+    expect(isJobUpcomingOrOngoing(job, "2026-08-28")).toBe(false);
+  });
+
+  it("is false when there's no date at all", () => {
+    expect(isJobUpcomingOrOngoing({ jobDate: null, jobDurationDays: 1 }, "2026-08-28")).toBe(false);
   });
 });
