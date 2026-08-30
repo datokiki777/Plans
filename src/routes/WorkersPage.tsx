@@ -10,7 +10,7 @@ import { useToast } from "@/shared/ui/Toast";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { workerRepository, stayRepository } from "@/db/repositories";
 import { useWorkers, type WorkerWithInfo } from "@/features/periods/useWorkers";
-import { maxDeparture } from "@/entities/stay";
+import { maxDeparture, diffDays } from "@/entities/stay";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
 import "./WorkersPage.css";
 
@@ -140,6 +140,22 @@ export default function WorkersPage() {
                         : ""
                   }`}
                   style={{ width: `${Math.min(100, (w.info.elapsedDays / (w.info.elapsedDays + w.info.remainingDays)) * 100)}%` }}
+                />
+              </div>
+            )}
+            {!w.info.inside && w.info.last?.exitDate && w.info.backDate && (
+              <div className="workers-page__progress workers-page__progress--outside" aria-hidden="true">
+                <div
+                  className="workers-page__progress-fill workers-page__progress-fill--outside"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Math.max(
+                        0,
+                        (diffDays(w.info.last.exitDate, todayDateOnly()) / Math.max(1, diffDays(w.info.last.exitDate, w.info.backDate))) * 100
+                      )
+                    )}%`
+                  }}
                 />
               </div>
             )}

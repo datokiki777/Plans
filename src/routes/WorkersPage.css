@@ -37,23 +37,23 @@
 }
 
 .workers-page__row--inside {
-  background: var(--color-brand-soft);
-  border-color: var(--color-brand);
+  background: var(--color-ok-soft);
+  border-color: var(--color-ok);
 }
 
 .workers-page__row--outside {
-  background: var(--color-surface-soft);
-  border-color: var(--color-line);
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
 }
 
 .workers-page__status {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--color-brand);
+  color: var(--color-ok);
 }
 
 .workers-page__status--out {
-  color: var(--color-muted);
+  color: var(--color-danger);
 }
 
 .workers-page__row-meta {
@@ -85,6 +85,10 @@
 }
 
 .workers-page__progress-fill--danger {
+  background: var(--color-danger);
+}
+
+.workers-page__progress-fill--outside {
   background: var(--color-danger);
 }
 
