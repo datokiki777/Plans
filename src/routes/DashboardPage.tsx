@@ -45,7 +45,11 @@ function JobRow({
   today: string;
 }) {
   return (
-    <Card className={`dashboard__row${isJobRowHighlighted(job, groupHighlightDates, today) ? " dashboard__row--today" : ""}`}>
+    <Card
+      className={`dashboard__row${
+        job.status === "archived" ? " dashboard__row--archived" : isJobRowHighlighted(job, groupHighlightDates, today) ? " dashboard__row--today" : ""
+      }`}
+    >
       <Link to={`/jobs/${job.id}`} className="dashboard__row-link">
         <div className="dashboard__row-head">
           <strong>{job.clientSnapshot.fullName}</strong>

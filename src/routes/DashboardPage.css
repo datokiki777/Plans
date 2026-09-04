@@ -49,6 +49,11 @@
   border-color: var(--color-ok);
 }
 
+.dashboard__row--archived {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+}
+
 .dashboard__row-link {
   flex: 1 1 auto;
   min-width: 0;

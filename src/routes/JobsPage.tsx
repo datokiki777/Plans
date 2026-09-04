@@ -113,7 +113,12 @@ export default function JobsPage() {
 
       <div className="jobs-page__list">
         {jobs.map((job) => (
-          <Card key={job.id} className={`jobs-page__row${isJobRowHighlighted(job, groupHighlightDates, today) ? " jobs-page__row--today" : ""}`}>
+          <Card
+            key={job.id}
+            className={`jobs-page__row${
+              job.status === "archived" ? " jobs-page__row--archived" : isJobRowHighlighted(job, groupHighlightDates, today) ? " jobs-page__row--today" : ""
+            }`}
+          >
             <Link to={`/jobs/${job.id}`} className="jobs-page__row-link">
               <div className="jobs-page__row-head">
                 <strong>{job.clientSnapshot.fullName || "უსახელო სამუშაო"}</strong>
