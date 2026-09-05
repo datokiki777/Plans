@@ -7,6 +7,7 @@ import type { LoadingList } from "@/entities/loading-list";
 import type { LoadingItem } from "@/entities/loading-item";
 import type { Worker } from "@/entities/worker";
 import type { Stay } from "@/entities/stay";
+import type { GroupPeriod } from "@/entities/group-period";
 import type { MigrationRecord } from "@/entities/migration-record";
 
 /**
@@ -28,6 +29,7 @@ export class AppDatabase extends Dexie {
   loadingItems!: EntityTable<LoadingItem, "id">;
   workers!: EntityTable<Worker, "id">;
   stays!: EntityTable<Stay, "id">;
+  groupPeriods!: EntityTable<GroupPeriod, "id">;
   migrationRecords!: EntityTable<MigrationRecord, "id">;
 
   constructor(name: string = V2_DB_NAME) {
@@ -97,6 +99,38 @@ export class AppDatabase extends Dexie {
           }
         });
     });
+
+    // Version 5: adds the groupPeriods table (a group/car's planned work
+    // periods - complete date ranges, unlike Stay's entry/exit-later
+    // model) - a genuinely new table, so this needs a full .stores()
+    // definition (all prior tables repeated unchanged, Dexie's
+    // requirement for any schema/index change), not just an upgrade().
+    // Also backfills Group.carNumber/worker1Name/worker2Name for every
+    // existing group - all optional going forward, existing groups are
+    // left exactly as they were otherwise.
+    this.version(5)
+      .stores({
+        clients: "id, fullName, archivedAt",
+        jobs: "id, clientId, groupId, status, jobDate, [groupId+status]",
+        groups: "id, name, archivedAt",
+        fieldTemplates: "id, fieldKey, [fieldKey+sortOrder]",
+        loadingLists: "id, archivedAt",
+        loadingItems: "id, loadingListId, [loadingListId+category]",
+        workers: "id, archivedAt",
+        stays: "id, workerId, [workerId+entryDate]",
+        groupPeriods: "id, groupId, [groupId+startDate]",
+        migrationRecords: "id, sourceExportId"
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("groups")
+          .toCollection()
+          .modify((group: { carNumber?: unknown; worker1Name?: unknown; worker2Name?: unknown }) => {
+            if (group.carNumber === undefined) group.carNumber = null;
+            if (group.worker1Name === undefined) group.worker1Name = "";
+            if (group.worker2Name === undefined) group.worker2Name = "";
+          });
+      });
   }
 }
 

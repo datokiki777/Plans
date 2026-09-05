@@ -104,4 +104,27 @@ describe("LocalGroupRepository", () => {
 
     expect(await jobs.countByGroup(group.id)).toBe(1);
   });
+
+  it("create() defaults carNumber/worker1Name/worker2Name, and they can be provided explicitly", async () => {
+    const plain = await groups.create({ name: "პლანი" });
+    expect(plain.carNumber).toBeNull();
+    expect(plain.worker1Name).toBe("");
+    expect(plain.worker2Name).toBe("");
+
+    const withDetails = await groups.create({ name: "მანქანა 1", carNumber: 1, worker1Name: "გიორგი", worker2Name: "დავითი" });
+    expect(withDetails.carNumber).toBe(1);
+    expect(withDetails.worker1Name).toBe("გიორგი");
+    expect(withDetails.worker2Name).toBe("დავითი");
+  });
+
+  it("updateDetails() sets carNumber/worker1Name/worker2Name independently of rename", async () => {
+    const group = await groups.create({ name: "მანქანა 2" });
+    await groups.updateDetails(group.id, { carNumber: 2, worker1Name: "ლუკა", worker2Name: "ნიკა" });
+
+    const updated = await groups.getById(group.id);
+    expect(updated?.carNumber).toBe(2);
+    expect(updated?.worker1Name).toBe("ლუკა");
+    expect(updated?.worker2Name).toBe("ნიკა");
+    expect(updated?.name).toBe("მანქანა 2"); // rename() wasn't called - name is untouched
+  });
 });

@@ -16,7 +16,7 @@ describe("backupService", () => {
   });
 
   it("buildBackup captures every table's current rows with the correct format/version", async () => {
-    await testDb.groups.add({ id: "g1", name: "ჯგუფი", createdAt: "2026-01-01", updatedAt: "2026-01-01", archivedAt: null });
+    await testDb.groups.add({ id: "g1", name: "ჯგუფი", carNumber: null, worker1Name: "", worker2Name: "", createdAt: "2026-01-01", updatedAt: "2026-01-01", archivedAt: null });
     const backup = await buildBackup(testDb);
     expect(backup.format).toBe(V2_BACKUP_FORMAT);
     expect(backup.data.groups).toHaveLength(1);
@@ -29,7 +29,7 @@ describe("backupService", () => {
   });
 
   it("restoreBackup REPLACES existing data (clears tables first)", async () => {
-    await testDb.groups.add({ id: "old-group", name: "ძველი", createdAt: "2020-01-01", updatedAt: "2020-01-01", archivedAt: null });
+    await testDb.groups.add({ id: "old-group", name: "ძველი", carNumber: null, worker1Name: "", worker2Name: "", createdAt: "2020-01-01", updatedAt: "2020-01-01", archivedAt: null });
 
     const backup: V2Backup = {
       format: V2_BACKUP_FORMAT,
@@ -39,7 +39,7 @@ describe("backupService", () => {
       data: {
         clients: [],
         jobs: [],
-        groups: [{ id: "new-group", name: "ახალი", createdAt: "2026-01-01", updatedAt: "2026-01-01", archivedAt: null }],
+        groups: [{ id: "new-group", name: "ახალი", carNumber: null, worker1Name: "", worker2Name: "", createdAt: "2026-01-01", updatedAt: "2026-01-01", archivedAt: null }],
         fieldTemplates: [],
         loadingLists: [],
         loadingItems: [],
@@ -57,7 +57,7 @@ describe("backupService", () => {
   });
 
   it("a failed restore rolls back completely - original data survives", async () => {
-    await testDb.groups.add({ id: "keep-me", name: "შენარჩუნებული", createdAt: "2020-01-01", updatedAt: "2020-01-01", archivedAt: null });
+    await testDb.groups.add({ id: "keep-me", name: "შენარჩუნებული", carNumber: null, worker1Name: "", worker2Name: "", createdAt: "2020-01-01", updatedAt: "2020-01-01", archivedAt: null });
 
     const backup: V2Backup = {
       format: V2_BACKUP_FORMAT,

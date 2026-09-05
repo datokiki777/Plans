@@ -16,9 +16,9 @@ export interface GroupFormProps {
   onSaved: () => void;
 }
 
-/** Rename dialog for an existing group - mobile-friendly replacement for the
- * previous window.prompt() implementation, matching the ClientForm/JobForm
- * pattern (Dialog + React Hook Form + Zod) used everywhere else in V2. */
+/** Edit dialog for an existing group - name, plus the optional car number
+ * and two worker names. Existing (date-in-name style) groups can fill
+ * these in whenever it's convenient - nothing requires it. */
 export function GroupForm({ open, onClose, group, onSaved }: GroupFormProps) {
   const showToast = useToast();
   const {
@@ -28,17 +28,29 @@ export function GroupForm({ open, onClose, group, onSaved }: GroupFormProps) {
     formState: { errors, isSubmitting }
   } = useForm<GroupFormValues>({
     resolver: zodResolver(groupFormSchema),
-    defaultValues: { name: "" }
+    defaultValues: { name: "", carNumber: "", worker1Name: "", worker2Name: "" }
   });
 
   useEffect(() => {
-    if (open) reset({ name: group?.name ?? "" });
+    if (open) {
+      reset({
+        name: group?.name ?? "",
+        carNumber: group?.carNumber ? String(group.carNumber) : "",
+        worker1Name: group?.worker1Name ?? "",
+        worker2Name: group?.worker2Name ?? ""
+      });
+    }
   }, [open, group, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
     if (!group) return;
     await groupRepository.rename(group.id, values.name);
-    showToast("ჯგუფი გადარქმეულია.", "ok");
+    await groupRepository.updateDetails(group.id, {
+      carNumber: values.carNumber ? Number(values.carNumber) : null,
+      worker1Name: values.worker1Name,
+      worker2Name: values.worker2Name
+    });
+    showToast("ჯგუფი შენახულია.", "ok");
     onSaved();
     onClose();
   });
@@ -47,7 +59,7 @@ export function GroupForm({ open, onClose, group, onSaved }: GroupFormProps) {
     <Dialog
       open={open}
       onClose={onClose}
-      title="ჯგუფის გადარქმევა"
+      title="ჯგუფის რედაქტირება"
       footer={
         <>
           <Button onClick={onClose}>გაუქმება</Button>
@@ -60,6 +72,15 @@ export function GroupForm({ open, onClose, group, onSaved }: GroupFormProps) {
       <form onSubmit={(e) => void onSubmit(e)}>
         <FormField label="დასახელება" error={errors.name?.message}>
           <Input {...register("name")} autoComplete="off" autoFocus />
+        </FormField>
+        <FormField label="მანქანის ნომერი" hint="არასავალდებულო">
+          <Input type="number" inputMode="numeric" {...register("carNumber")} autoComplete="off" />
+        </FormField>
+        <FormField label="მუშა 1" hint="არასავალდებულო">
+          <Input {...register("worker1Name")} autoComplete="off" />
+        </FormField>
+        <FormField label="მუშა 2" hint="არასავალდებულო">
+          <Input {...register("worker2Name")} autoComplete="off" />
         </FormField>
       </form>
     </Dialog>
