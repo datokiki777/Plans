@@ -10,6 +10,7 @@ import { jobRepository, groupRepository, workerRepository, stayRepository, loadi
 import type { Job } from "@/entities/job";
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted, isJobUpcomingOrOngoing } from "@/entities/job";
 import type { Group } from "@/entities/group";
+import { formatGroupLabel } from "@/entities/group";
 import { currentPeriodInfo } from "@/entities/stay";
 import type { LoadingList } from "@/entities/loading-list";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
@@ -171,7 +172,7 @@ export default function DashboardPage() {
               <JobRow
                 key={job.id}
                 job={job}
-                groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
+                groupName={job.groupId && data.groupsById.get(job.groupId) ? formatGroupLabel(data.groupsById.get(job.groupId)!) : undefined}
                 onShare={handleShare}
                 sharing={sharing}
                 groupHighlightDates={data.groupHighlightDates}
@@ -189,7 +190,7 @@ export default function DashboardPage() {
             <JobRow
               key={job.id}
               job={job}
-              groupName={job.groupId ? data.groupsById.get(job.groupId)?.name : undefined}
+              groupName={job.groupId && data.groupsById.get(job.groupId) ? formatGroupLabel(data.groupsById.get(job.groupId)!) : undefined}
               onShare={handleShare}
               sharing={sharing}
               groupHighlightDates={data.groupHighlightDates}

@@ -5,3 +5,11 @@
 export function canPermanentlyDeleteGroup(jobCount: number): boolean {
   return jobCount === 0;
 }
+
+/** The group label shown on a Job card - name alone for old-style groups,
+ * or "name · worker1, worker2" when worker names are set, so a job card
+ * identifies which crew it is without needing to open the group. */
+export function formatGroupLabel(group: { name: string; worker1Name: string; worker2Name: string }): string {
+  const workers = [group.worker1Name, group.worker2Name].filter(Boolean).join(", ");
+  return workers ? `${group.name} · ${workers}` : group.name;
+}

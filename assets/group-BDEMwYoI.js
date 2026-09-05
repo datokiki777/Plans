@@ -1,0 +1,1 @@
+import{a as e,i as t}from"./schemas-CBW7uIiF.js";var n=t({name:e().trim().min(1,`დასახელება აუცილებელია`),carNumber:e().trim(),worker1Name:e().trim(),worker2Name:e().trim()});function r(e){return e===0}function i(e){let t=[e.worker1Name,e.worker2Name].filter(Boolean).join(`, `);return t?`${e.name} · ${t}`:e.name}export{i as n,n as r,r as t};

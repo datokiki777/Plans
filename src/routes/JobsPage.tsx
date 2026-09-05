@@ -16,6 +16,7 @@ import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
 import { groupRepository, jobRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
+import { formatGroupLabel } from "@/entities/group";
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted, type Job } from "@/entities/job";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
 import "./JobsPage.css";
@@ -130,7 +131,7 @@ export default function JobsPage() {
                   {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
                 </p>
                 {job.groupId && groupsById.get(job.groupId) && (
-                  <span className="jobs-page__row-group">{groupsById.get(job.groupId)?.name}</span>
+                  <span className="jobs-page__row-group">{formatGroupLabel(groupsById.get(job.groupId)!)}</span>
                 )}
               </div>
             </Link>
