@@ -8,6 +8,7 @@ import { SelectField } from "@/shared/ui/SelectField";
 import { useToast } from "@/shared/ui/Toast";
 import { clientRepository, groupRepository, jobRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
+import { formatGroupLabel } from "@/entities/group";
 import type { Job } from "@/entities/job";
 import { jobFormSchema, JOB_FORM_DEFAULTS, jobFormToPersistedFields, jobToFormValues, type JobFormValues } from "@/entities/job";
 import { findMatchingClient } from "@/entities/client";
@@ -139,7 +140,7 @@ export function JobForm({ open, onClose, job, initialGroupId, onSaved }: JobForm
                 onChange={field.onChange}
                 placeholder="— აირჩიე ჯგუფი —"
                 title="ჯგუფის არჩევა"
-                options={groups.map((g) => ({ value: g.id, label: g.name }))}
+                options={groups.map((g) => ({ value: g.id, label: formatGroupLabel(g) }))}
               />
             )}
           />

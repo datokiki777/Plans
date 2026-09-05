@@ -6,10 +6,14 @@ export function canPermanentlyDeleteGroup(jobCount: number): boolean {
   return jobCount === 0;
 }
 
-/** The group label shown on a Job card - name alone for old-style groups,
- * or "name · worker1, worker2" when worker names are set, so a job card
- * identifies which crew it is without needing to open the group. */
-export function formatGroupLabel(group: { name: string; worker1Name: string; worker2Name: string }): string {
+/** The group label shown everywhere a Job references its group (Jobs page
+ * rows, Dashboard rows, and the group filter dropdown itself) - plain
+ * name alone for old-style groups, or "🚐 N · name · worker1, worker2"
+ * once a car number and/or worker names are set, so it's identifiable at
+ * a glance without opening the group. */
+export function formatGroupLabel(group: { name: string; carNumber: number | null; worker1Name: string; worker2Name: string }): string {
   const workers = [group.worker1Name, group.worker2Name].filter(Boolean).join(", ");
-  return workers ? `${group.name} · ${workers}` : group.name;
+  const carPrefix = group.carNumber !== null ? `🚐 ${group.carNumber} · ` : "";
+  const workerSuffix = workers ? ` · ${workers}` : "";
+  return `${carPrefix}${group.name}${workerSuffix}`;
 }

@@ -7,6 +7,7 @@ import { useToast } from "@/shared/ui/Toast";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { groupPeriodRepository, jobRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
+import { formatGroupLabel } from "@/entities/group";
 import type { GroupPeriod } from "@/entities/group-period";
 import { jobOverlapsPeriod } from "@/entities/group-period";
 import type { Job } from "@/entities/job";
@@ -106,7 +107,7 @@ export function GroupPeriodsDialog({ group, onClose }: GroupPeriodsDialogProps) 
   };
 
   return (
-    <Dialog open={group !== null} onClose={onClose} title={`პერიოდები - ${group.name}`}>
+    <Dialog open={group !== null} onClose={onClose} title={`პერიოდები - ${formatGroupLabel(group)}`}>
       <div className="group-periods">
         <p className="group-periods__hint">
           სამუშაოები ავტომატურად ჩნდება შესაბამის პერიოდში - საკმარისია სამუშაოს ფორმაში ეს ჯგუფი და თარიღი აირჩიო, ხელით მიბმა არ სჭირდება.

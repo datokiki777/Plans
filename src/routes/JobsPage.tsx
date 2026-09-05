@@ -89,7 +89,7 @@ export default function JobsPage() {
           onChange={setGroupId}
           placeholder="ყველა ჯგუფი"
           title="ჯგუფის მიხედვით გაფილტვრა"
-          options={groups.map((g) => ({ value: g.id, label: g.name, highlight: groupHighlightDates.has(g.id) }))}
+          options={groups.map((g) => ({ value: g.id, label: formatGroupLabel(g), highlight: groupHighlightDates.has(g.id) }))}
         />
       </div>
 
