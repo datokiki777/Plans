@@ -10,10 +10,23 @@ export function canPermanentlyDeleteGroup(jobCount: number): boolean {
  * rows, Dashboard rows, and the group filter dropdown itself) - plain
  * name alone for old-style groups, or "🚐 N · name · worker1, worker2"
  * once a car number and/or worker names are set, so it's identifiable at
- * a glance without opening the group. */
-export function formatGroupLabel(group: { name: string; carNumber: number | null; worker1Name: string; worker2Name: string }): string {
-  const workers = [group.worker1Name, group.worker2Name].filter(Boolean).join(", ");
-  const carPrefix = group.carNumber !== null ? `🚐 ${group.carNumber} · ` : "";
+ * a glance without opening the group.
+ *
+ * `periodOverride` lets a Job's card show the car/workers as they were
+ * for the specific period that job falls into (see
+ * entities/group-period/domain.ts findPeriodForJob), instead of the
+ * group's current values - so reassigning a car going forward doesn't
+ * silently rewrite which car an already-recorded job used. Falls back to
+ * the group's own fields when no matching period exists (or none is
+ * passed at all, e.g. the group picker dropdown, which has no specific
+ * job/date context). */
+export function formatGroupLabel(
+  group: { name: string; carNumber: number | null; worker1Name: string; worker2Name: string },
+  periodOverride?: { carNumber: number | null; worker1Name: string; worker2Name: string } | null
+): string {
+  const source = periodOverride ?? group;
+  const workers = [source.worker1Name, source.worker2Name].filter(Boolean).join(", ");
+  const carPrefix = source.carNumber !== null ? `🚐 ${source.carNumber} · ` : "";
   const workerSuffix = workers ? ` · ${workers}` : "";
   return `${carPrefix}${group.name}${workerSuffix}`;
 }

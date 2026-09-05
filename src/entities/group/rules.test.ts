@@ -39,4 +39,22 @@ describe("formatGroupLabel", () => {
       "🚐 1 · 108 · გიორგი, დავითი"
     );
   });
+
+  it("uses the period override's car/workers instead of the group's current ones when given", () => {
+    const group = { name: "108", carNumber: 3, worker1Name: "ახალი1", worker2Name: "ახალი2" }; // car reassigned since
+    const periodOverride = { carNumber: 1, worker1Name: "ძველი1", worker2Name: "ძველი2" }; // what it was back then
+    expect(formatGroupLabel(group, periodOverride)).toBe("🚐 1 · 108 · ძველი1, ძველი2");
+  });
+
+  it("falls back to the group's own fields when no period override is given", () => {
+    const group = { name: "108", carNumber: 3, worker1Name: "გიო", worker2Name: "დათო" };
+    expect(formatGroupLabel(group)).toBe("🚐 3 · 108 · გიო, დათო");
+    expect(formatGroupLabel(group, null)).toBe("🚐 3 · 108 · გიო, დათო");
+  });
+
+  it("the group's own name is always used, even with a period override (periods don't have names)", () => {
+    const group = { name: "108", carNumber: null, worker1Name: "", worker2Name: "" };
+    const periodOverride = { carNumber: 2, worker1Name: "გიო", worker2Name: "" };
+    expect(formatGroupLabel(group, periodOverride)).toBe("🚐 2 · 108 · გიო");
+  });
 });

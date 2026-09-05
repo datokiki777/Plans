@@ -6,9 +6,10 @@ import { Button } from "@/shared/ui/Button";
 import { FormField, Input, Textarea } from "@/shared/ui/fields";
 import { SelectField } from "@/shared/ui/SelectField";
 import { useToast } from "@/shared/ui/Toast";
-import { clientRepository, groupRepository, jobRepository } from "@/db/repositories";
+import { clientRepository, groupRepository, groupPeriodRepository, jobRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
 import { formatGroupLabel } from "@/entities/group";
+import { isJobDateAllowedForGroup } from "@/entities/group-period";
 import type { Job } from "@/entities/job";
 import { jobFormSchema, JOB_FORM_DEFAULTS, jobFormToPersistedFields, jobToFormValues, type JobFormValues } from "@/entities/job";
 import { findMatchingClient } from "@/entities/client";
@@ -93,6 +94,15 @@ export function JobForm({ open, onClose, job, initialGroupId, onSaved }: JobForm
 
   const onSubmit = handleSubmit(async (values) => {
     const fields = jobFormToPersistedFields(values);
+
+    if (fields.groupId) {
+      const groupPeriods = await groupPeriodRepository.listByGroup(fields.groupId);
+      if (!isJobDateAllowedForGroup(fields, groupPeriods)) {
+        showToast("ეს თარიღი ამ ჯგუფის არცერთ პერიოდს არ ემთხვევა - ჯერ დაამატე შესაბამისი პერიოდი „ჯგუფებში“, ან შეცვალე თარიღი.", "warn");
+        return;
+      }
+    }
+
     const clientId = await resolveClientId(values);
 
     if (job) {

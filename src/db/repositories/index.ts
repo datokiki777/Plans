@@ -30,7 +30,7 @@ export const migrationRepository = new LocalMigrationRepository(db);
 export type { ClientRepository } from "./client.repository";
 export type { JobRepository } from "./job.repository";
 export type { GroupRepository } from "./group.repository";
-export type { GroupPeriodRepository } from "./group-period.repository";
+export type { GroupPeriodRepository, GroupPeriodUpdate } from "./group-period.repository";
 export type { TemplateRepository } from "./template.repository";
 export type { LoadingRepository } from "./loading.repository";
 export type { WorkerRepository } from "./worker.repository";

@@ -6,11 +6,13 @@ import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { useToast } from "@/shared/ui/Toast";
-import { jobRepository, groupRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
+import { jobRepository, groupRepository, groupPeriodRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted, isJobUpcomingOrOngoing } from "@/entities/job";
 import type { Group } from "@/entities/group";
 import { formatGroupLabel } from "@/entities/group";
+import type { GroupPeriod } from "@/entities/group-period";
+import { findPeriodForJob } from "@/entities/group-period";
 import { currentPeriodInfo } from "@/entities/stay";
 import type { LoadingList } from "@/entities/loading-list";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
@@ -23,6 +25,7 @@ interface DashboardData {
   upcoming: Job[];
   recent: Job[];
   groupsById: Map<string, Group>;
+  periods: GroupPeriod[];
   workersInside: number;
   workersUrgent: number;
   recentLoadingLists: LoadingList[];
@@ -32,14 +35,16 @@ interface DashboardData {
 
 function JobRow({
   job,
-  groupName,
+  group,
+  periods,
   onShare,
   sharing,
   groupHighlightDates,
   today
 }: {
   job: Job;
-  groupName?: string;
+  group?: Group;
+  periods: GroupPeriod[];
   onShare: (job: Job) => void;
   sharing: boolean;
   groupHighlightDates: Map<string, string>;
@@ -63,7 +68,7 @@ function JobRow({
               {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
             </span>
           )}
-          {groupName && <span className="dashboard__row-group">{groupName}</span>}
+          {group && <span className="dashboard__row-group">{formatGroupLabel(group, findPeriodForJob(job, periods))}</span>}
         </div>
       </Link>
       <ShareIconButton
@@ -86,12 +91,13 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [activeCount, activeJobs, recent, allJobsForHighlight, groups, workers, recentLoadingLists] = await Promise.all([
+      const [activeCount, activeJobs, recent, allJobsForHighlight, groups, periods, workers, recentLoadingLists] = await Promise.all([
         jobRepository.list({ status: "active" }).then((r) => r.length),
         jobRepository.list({ status: "active", limit: 50 }),
         jobRepository.list({ limit: 5 }),
         jobRepository.list({ limit: 300 }),
         groupRepository.list({ includeArchived: true }),
+        groupPeriodRepository.listAll(),
         workerRepository.list(),
         loadingRepository.listLists({ includeArchived: false })
       ]);
@@ -115,6 +121,7 @@ export default function DashboardPage() {
           upcoming,
           recent,
           groupsById: new Map(groups.map((g) => [g.id, g])),
+          periods,
           workersInside,
           workersUrgent,
           recentLoadingLists: recentLoadingLists.slice(0, 3),
@@ -172,7 +179,8 @@ export default function DashboardPage() {
               <JobRow
                 key={job.id}
                 job={job}
-                groupName={job.groupId && data.groupsById.get(job.groupId) ? formatGroupLabel(data.groupsById.get(job.groupId)!) : undefined}
+                group={job.groupId ? data.groupsById.get(job.groupId) : undefined}
+                periods={data.periods}
                 onShare={handleShare}
                 sharing={sharing}
                 groupHighlightDates={data.groupHighlightDates}
@@ -190,7 +198,8 @@ export default function DashboardPage() {
             <JobRow
               key={job.id}
               job={job}
-              groupName={job.groupId && data.groupsById.get(job.groupId) ? formatGroupLabel(data.groupsById.get(job.groupId)!) : undefined}
+              group={job.groupId ? data.groupsById.get(job.groupId) : undefined}
+              periods={data.periods}
               onShare={handleShare}
               sharing={sharing}
               groupHighlightDates={data.groupHighlightDates}

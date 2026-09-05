@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jobOverlapsPeriod } from "./domain";
+import { jobOverlapsPeriod, findPeriodForJob, isJobDateAllowedForGroup } from "./domain";
 import type { GroupPeriod } from "./types";
 
 function period(overrides: Partial<GroupPeriod> = {}): GroupPeriod {
@@ -8,6 +8,9 @@ function period(overrides: Partial<GroupPeriod> = {}): GroupPeriod {
     groupId: "g1",
     startDate: "2026-09-01",
     endDate: "2026-09-05",
+    carNumber: null,
+    worker1Name: "",
+    worker2Name: "",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides
@@ -57,5 +60,50 @@ describe("jobOverlapsPeriod", () => {
   it("does not match one day short of the boundary", () => {
     // Job: Aug 30 - Aug 31 (2 days) - ends the day before the period starts.
     expect(jobOverlapsPeriod({ jobDate: "2026-08-30", jobDurationDays: 2 }, period())).toBe(false);
+  });
+});
+
+describe("findPeriodForJob", () => {
+  it("returns undefined when the job has no group", () => {
+    expect(findPeriodForJob({ jobDate: "2026-09-03", jobDurationDays: 1, groupId: null }, [period()])).toBeUndefined();
+  });
+
+  it("returns undefined when no period overlaps the job's date", () => {
+    expect(findPeriodForJob({ jobDate: "2026-10-01", jobDurationDays: 1, groupId: "g1" }, [period()])).toBeUndefined();
+  });
+
+  it("ignores periods belonging to a different group", () => {
+    const otherGroup = period({ id: "p2", groupId: "g2" });
+    expect(findPeriodForJob({ jobDate: "2026-09-03", jobDurationDays: 1, groupId: "g1" }, [otherGroup])).toBeUndefined();
+  });
+
+  it("finds the matching period for the job's group and date", () => {
+    const match = period();
+    expect(findPeriodForJob({ jobDate: "2026-09-03", jobDurationDays: 1, groupId: "g1" }, [match])).toBe(match);
+  });
+
+  it("picks the most recently started period when more than one overlaps", () => {
+    const earlier = period({ id: "p-earlier", startDate: "2026-08-25", endDate: "2026-09-10" });
+    const later = period({ id: "p-later", startDate: "2026-09-01", endDate: "2026-09-05" });
+    const result = findPeriodForJob({ jobDate: "2026-09-03", jobDurationDays: 1, groupId: "g1" }, [earlier, later]);
+    expect(result?.id).toBe("p-later");
+  });
+});
+
+describe("isJobDateAllowedForGroup", () => {
+  it("is always allowed when the group has no periods at all", () => {
+    expect(isJobDateAllowedForGroup({ jobDate: "2026-01-01", jobDurationDays: 1 }, [])).toBe(true);
+  });
+
+  it("is allowed when the job's date falls within one of the group's periods", () => {
+    expect(isJobDateAllowedForGroup({ jobDate: "2026-09-03", jobDurationDays: 1 }, [period()])).toBe(true);
+  });
+
+  it("is blocked when the group has periods but none cover the job's date", () => {
+    expect(isJobDateAllowedForGroup({ jobDate: "2026-10-01", jobDurationDays: 1 }, [period()])).toBe(false);
+  });
+
+  it("is always allowed when the job has no date yet, even if the group has periods", () => {
+    expect(isJobDateAllowedForGroup({ jobDate: null, jobDurationDays: null }, [period()])).toBe(true);
   });
 });

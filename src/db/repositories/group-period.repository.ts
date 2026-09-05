@@ -2,10 +2,24 @@ import type { AppDatabase } from "@/db/database";
 import type { GroupPeriod, NewGroupPeriodInput } from "@/entities/group-period";
 import { createId, nowIso } from "@/shared/lib/id";
 
+export interface GroupPeriodUpdate {
+  startDate: string;
+  endDate: string;
+  carNumber: number | null;
+  worker1Name: string;
+  worker2Name: string;
+}
+
 export interface GroupPeriodRepository {
   listByGroup(groupId: string): Promise<GroupPeriod[]>;
+  /** All periods, across every group - used when rendering a list of Jobs
+   * from multiple groups at once (e.g. Jobs page, Dashboard), where
+   * fetching per-group individually would mean one query per distinct
+   * group shown. Bounded and safe since there are only ever a handful of
+   * groups (and their periods) in this app. */
+  listAll(): Promise<GroupPeriod[]>;
   create(input: NewGroupPeriodInput): Promise<GroupPeriod>;
-  update(id: string, patch: { startDate: string; endDate: string }): Promise<void>;
+  update(id: string, patch: GroupPeriodUpdate): Promise<void>;
   delete(id: string): Promise<void>;
 }
 
@@ -21,6 +35,10 @@ export class LocalGroupPeriodRepository implements GroupPeriodRepository {
     return periods.sort((a, b) => b.startDate.localeCompare(a.startDate));
   }
 
+  async listAll(): Promise<GroupPeriod[]> {
+    return this.db.groupPeriods.toArray();
+  }
+
   async create(input: NewGroupPeriodInput): Promise<GroupPeriod> {
     const now = nowIso();
     const period: GroupPeriod = { id: createId(), ...input, createdAt: now, updatedAt: now };
@@ -28,7 +46,7 @@ export class LocalGroupPeriodRepository implements GroupPeriodRepository {
     return period;
   }
 
-  async update(id: string, patch: { startDate: string; endDate: string }): Promise<void> {
+  async update(id: string, patch: GroupPeriodUpdate): Promise<void> {
     await this.db.groupPeriods.update(id, { ...patch, updatedAt: nowIso() });
   }
 

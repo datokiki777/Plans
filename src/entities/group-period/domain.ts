@@ -12,3 +12,31 @@ export function jobOverlapsPeriod(job: { jobDate: string | null; jobDurationDays
   const jobEnd = addDays(job.jobDate, days - 1);
   return job.jobDate <= period.endDate && jobEnd >= period.startDate;
 }
+
+/** Finds which of a group's periods (if any) a job falls into, so its
+ * car/worker info can be read from that period's own snapshot rather than
+ * the group's current (possibly since-changed) values. When a job matches
+ * more than one period (overlapping periods, which shouldn't normally
+ * happen but isn't actively prevented), the most recently started one
+ * wins. */
+export function findPeriodForJob(
+  job: { jobDate: string | null; jobDurationDays: number | null; groupId: string | null },
+  periods: GroupPeriod[]
+): GroupPeriod | undefined {
+  if (!job.groupId) return undefined;
+  const candidates = periods.filter((p) => p.groupId === job.groupId && jobOverlapsPeriod(job, p));
+  if (candidates.length === 0) return undefined;
+  return candidates.reduce((latest, p) => (p.startDate > latest.startDate ? p : latest));
+}
+
+/** Whether a job's date is allowed for its group, given that group's own
+ * periods (already filtered to just this group). A group that has never
+ * defined any periods is unrestricted (old-style groups, or ones that
+ * simply don't use this feature) - the check only activates once at least
+ * one period exists, in which case the job's date must fall within one of
+ * them. Used to stop a job being created/edited with a date that doesn't
+ * belong to any of its group's planned work windows. */
+export function isJobDateAllowedForGroup(job: { jobDate: string | null; jobDurationDays: number | null }, groupPeriods: GroupPeriod[]): boolean {
+  if (!job.jobDate || groupPeriods.length === 0) return true;
+  return groupPeriods.some((p) => jobOverlapsPeriod(job, p));
+}

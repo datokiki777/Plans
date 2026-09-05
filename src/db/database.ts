@@ -131,6 +131,33 @@ export class AppDatabase extends Dexie {
             if (group.worker2Name === undefined) group.worker2Name = "";
           });
       });
+
+    // Version 6: moves carNumber/worker1Name/worker2Name onto GroupPeriod
+    // itself (backfilled to null/"" for any period created between v5 and
+    // this version) - a group's assigned car/crew can change over time,
+    // and each period needs to remember its OWN car/crew independent of
+    // later changes to the group. Also adds LoadingList.groupId (a
+    // loading list can now be created by picking a group directly,
+    // instead of always typing a free-text title) - not indexed (no
+    // "list by group" query yet), so a plain backfill.
+    this.version(6).upgrade(async (tx) => {
+      await tx
+        .table("groupPeriods")
+        .toCollection()
+        .modify((period: { carNumber?: unknown; worker1Name?: unknown; worker2Name?: unknown }) => {
+          if (period.carNumber === undefined) period.carNumber = null;
+          if (period.worker1Name === undefined) period.worker1Name = "";
+          if (period.worker2Name === undefined) period.worker2Name = "";
+        });
+      await tx
+        .table("loadingLists")
+        .toCollection()
+        .modify((list: { groupId?: unknown }) => {
+          if (list.groupId === undefined) {
+            list.groupId = null;
+          }
+        });
+    });
   }
 }
 

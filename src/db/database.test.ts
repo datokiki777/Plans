@@ -24,7 +24,7 @@ describe("AppDatabase", () => {
 
     await testDb.open();
 
-    expect(testDb.verno).toBe(5);
+    expect(testDb.verno).toBe(6);
     expect(testDb.tables.map((t) => t.name).sort()).toEqual(
       [
         "clients",
@@ -93,7 +93,7 @@ describe("AppDatabase", () => {
     openDatabases.push(upgraded);
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(5);
+    expect(upgraded.verno).toBe(6);
     const migratedJob = await upgraded.jobs.get("legacy-job-1");
     expect(migratedJob?.statusBeforeArchive).toBeNull();
     expect(migratedJob?.status).toBe("archived"); // untouched by the migration itself
@@ -177,10 +177,75 @@ describe("AppDatabase", () => {
       groupId: "legacy-group-1",
       startDate: "2026-09-01",
       endDate: "2026-09-05",
+      carNumber: null,
+      worker1Name: "",
+      worker2Name: "",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z"
     });
     expect(await upgraded.groupPeriods.where("groupId").equals("legacy-group-1").count()).toBe(1);
+  });
+
+  it("migrates an existing pre-version-6 database: backfills GroupPeriod car/worker fields and LoadingList.groupId", async () => {
+    const dbName = `test-migration-v6-${crypto.randomUUID()}`;
+
+    const legacyDb = new Dexie(dbName);
+    legacyDb.version(5).stores({
+      clients: "id, fullName, archivedAt",
+      jobs: "id, clientId, groupId, status, jobDate, [groupId+status]",
+      groups: "id, name, archivedAt",
+      fieldTemplates: "id, fieldKey, [fieldKey+sortOrder]",
+      loadingLists: "id, archivedAt",
+      loadingItems: "id, loadingListId, [loadingListId+category]",
+      workers: "id, archivedAt",
+      stays: "id, workerId, [workerId+entryDate]",
+      groupPeriods: "id, groupId, [groupId+startDate]",
+      migrationRecords: "id, sourceExportId"
+    });
+    await legacyDb.open();
+    await legacyDb.table("groups").add({
+      id: "g1",
+      name: "108",
+      carNumber: null,
+      worker1Name: "",
+      worker2Name: "",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      archivedAt: null
+    });
+    await legacyDb.table("groupPeriods").add({
+      id: "period-legacy",
+      groupId: "g1",
+      startDate: "2026-09-01",
+      endDate: "2026-09-05",
+      // no carNumber/worker1Name/worker2Name at all - the real pre-v6 shape
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    });
+    await legacyDb.table("loadingLists").add({
+      id: "list-legacy",
+      title: "Legacy List",
+      specialNote: "",
+      // no groupId at all - the real pre-v6 shape
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      archivedAt: null
+    });
+    legacyDb.close();
+
+    const upgraded = new AppDatabase(dbName);
+    openDatabases.push(upgraded);
+    await upgraded.open();
+
+    const migratedPeriod = await upgraded.groupPeriods.get("period-legacy");
+    expect(migratedPeriod?.carNumber).toBeNull();
+    expect(migratedPeriod?.worker1Name).toBe("");
+    expect(migratedPeriod?.worker2Name).toBe("");
+    expect(migratedPeriod?.startDate).toBe("2026-09-01"); // untouched by the migration itself
+
+    const migratedList = await upgraded.loadingLists.get("list-legacy");
+    expect(migratedList?.groupId).toBeNull();
+    expect(migratedList?.title).toBe("Legacy List"); // untouched by the migration itself
   });
 
   it("can write and read a record in each table (basic round-trip)", async () => {

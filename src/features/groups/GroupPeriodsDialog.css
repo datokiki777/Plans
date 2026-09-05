@@ -57,3 +57,18 @@
   font-size: var(--text-sm);
   color: var(--color-muted);
 }
+
+.group-periods__date-pair {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.group-periods__date-pair > * {
+  flex: 1 1 0;
+}
+
+.group-periods__period-details {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}

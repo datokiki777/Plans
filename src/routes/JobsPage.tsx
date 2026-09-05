@@ -14,9 +14,11 @@ import { useJobsFilterStore, type JobsListTab } from "@/features/jobs/useJobsFil
 import { JobForm } from "@/features/jobs/JobForm";
 import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
-import { groupRepository, jobRepository } from "@/db/repositories";
+import { groupRepository, groupPeriodRepository, jobRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
 import { formatGroupLabel } from "@/entities/group";
+import type { GroupPeriod } from "@/entities/group-period";
+import { findPeriodForJob } from "@/entities/group-period";
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted, type Job } from "@/entities/job";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
 import "./JobsPage.css";
@@ -37,6 +39,7 @@ export default function JobsPage() {
 
   const [groups, setGroups] = useState<Group[]>([]);
   const groupsById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
+  const [periods, setPeriods] = useState<GroupPeriod[]>([]);
   const [groupHighlightDates, setGroupHighlightDates] = useState<Map<string, string>>(new Map());
   const [formOpen, setFormOpen] = useState(false);
   const { jobs, reload } = useJobs({ tab, groupId: groupId || undefined, query });
@@ -46,6 +49,7 @@ export default function JobsPage() {
 
   useEffect(() => {
     groupRepository.list().then(setGroups);
+    groupPeriodRepository.listAll().then(setPeriods);
   }, []);
 
   useEffect(() => {
@@ -131,7 +135,9 @@ export default function JobsPage() {
                   {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
                 </p>
                 {job.groupId && groupsById.get(job.groupId) && (
-                  <span className="jobs-page__row-group">{formatGroupLabel(groupsById.get(job.groupId)!)}</span>
+                  <span className="jobs-page__row-group">
+                    {formatGroupLabel(groupsById.get(job.groupId)!, findPeriodForJob(job, periods))}
+                  </span>
                 )}
               </div>
             </Link>

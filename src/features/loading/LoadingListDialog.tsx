@@ -3,10 +3,14 @@ import { Dialog } from "@/shared/ui/Dialog";
 import { Button } from "@/shared/ui/Button";
 import { IconButton } from "@/shared/ui/IconButton";
 import { Input, Textarea } from "@/shared/ui/fields";
+import { FormField } from "@/shared/ui/fields";
+import { SelectField } from "@/shared/ui/SelectField";
 import { useToast } from "@/shared/ui/Toast";
-import { loadingRepository } from "@/db/repositories";
+import { loadingRepository, groupRepository } from "@/db/repositories";
 import type { LoadingList } from "@/entities/loading-list";
 import type { LoadingCategory } from "@/entities/loading-item";
+import type { Group } from "@/entities/group";
+import { formatGroupLabel } from "@/entities/group";
 import { useFieldTemplates } from "@/features/templates/useFieldTemplates";
 import { TemplateFieldButton } from "@/features/templates/TemplateFieldButton";
 import "./LoadingListDialog.css";
@@ -73,6 +77,8 @@ export interface LoadingListDialogProps {
 
 export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListDialogProps) {
   const showToast = useToast();
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [groupId, setGroupId] = useState("");
   const [title, setTitle] = useState("");
   const [specialNote, setSpecialNote] = useState("");
   const [drafts, setDrafts] = useState<Record<LoadingCategory, Draft[]>>({ trays: [], glass: [], panels: [], extras: [] });
@@ -81,12 +87,15 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
 
   useEffect(() => {
     if (!open) return;
+    groupRepository.list().then(setGroups);
     if (!list) {
+      setGroupId("");
       setTitle("");
       setSpecialNote("");
       setDrafts({ trays: [], glass: [], panels: [], extras: [] });
       return;
     }
+    setGroupId(list.groupId ?? "");
     setTitle(list.title);
     setSpecialNote(list.specialNote);
     loadingRepository.listItems(list.id).then((items) => {
@@ -107,6 +116,12 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
       setDrafts(grouped);
     });
   }, [open, list]);
+
+  const handleSelectGroup = (id: string) => {
+    setGroupId(id);
+    const picked = groups.find((g) => g.id === id);
+    if (picked) setTitle(picked.name);
+  };
 
   const insertRowAt = (category: LoadingCategory, index: number) => {
     setDrafts((prev) => {
@@ -135,11 +150,12 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
     try {
       let listId = list?.id ?? null;
       if (!listId) {
-        const created = await loadingRepository.createList({ title: trimmedTitle, specialNote: specialNote.trim() });
+        const created = await loadingRepository.createList({ title: trimmedTitle, specialNote: specialNote.trim(), groupId: groupId || null });
         listId = created.id;
       } else {
         await loadingRepository.renameList(listId, trimmedTitle);
         await loadingRepository.setSpecialNote(listId, specialNote.trim());
+        await loadingRepository.setGroupId(listId, groupId || null);
         const existing = await loadingRepository.listItems(listId);
         await Promise.all(existing.map((it) => loadingRepository.deleteItem(it.id)));
       }
@@ -179,9 +195,19 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
         </>
       }
     >
+      <FormField label="ჯგუფი">
+        <SelectField
+          value={groupId}
+          onChange={handleSelectGroup}
+          placeholder="— აირჩიე ჯგუფი —"
+          title="ჯგუფის არჩევა"
+          options={groups.map((g) => ({ value: g.id, label: formatGroupLabel(g) }))}
+        />
+      </FormField>
+
       <label className="ui-form-field">
         <span className="ui-form-field__label">სათაური</span>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="მაგ. კლიენტის სახელი ან მისამართი" autoFocus />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="მაგ. კლიენტის სახელი ან მისამართი" />
       </label>
 
       {CATEGORIES.map((cat) => (
