@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Client } from "@/entities/client";
 import type { Job } from "@/entities/job";
 import type { Group } from "@/entities/group";
+import type { GroupPeriod } from "@/entities/group-period";
 import type { FieldTemplate } from "@/entities/template";
 import type { LoadingList } from "@/entities/loading-list";
 import type { LoadingItem } from "@/entities/loading-item";
@@ -22,6 +23,10 @@ export const v2BackupSchema = z.object({
     clients: entityArraySchema,
     jobs: entityArraySchema,
     groups: entityArraySchema,
+    // Optional, defaulting to [] - older backups made before group periods
+    // existed genuinely have none to restore, so their absence isn't an
+    // error; a backup made since then always includes the field.
+    groupPeriods: entityArraySchema.optional().default([]),
     fieldTemplates: entityArraySchema,
     loadingLists: entityArraySchema,
     loadingItems: entityArraySchema,
@@ -42,6 +47,7 @@ export interface V2Backup {
     clients: Client[];
     jobs: Job[];
     groups: Group[];
+    groupPeriods: GroupPeriod[];
     fieldTemplates: FieldTemplate[];
     loadingLists: LoadingList[];
     loadingItems: LoadingItem[];

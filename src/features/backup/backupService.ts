@@ -2,10 +2,11 @@ import { db, type AppDatabase } from "@/db/database";
 import { v2BackupSchema, V2_BACKUP_FORMAT, V2_BACKUP_SCHEMA_VERSION, type V2Backup } from "./schema";
 
 export async function buildBackup(database: AppDatabase = db): Promise<V2Backup> {
-  const [clients, jobs, groups, fieldTemplates, loadingLists, loadingItems, workers, stays] = await Promise.all([
+  const [clients, jobs, groups, groupPeriods, fieldTemplates, loadingLists, loadingItems, workers, stays] = await Promise.all([
     database.clients.toArray(),
     database.jobs.toArray(),
     database.groups.toArray(),
+    database.groupPeriods.toArray(),
     database.fieldTemplates.toArray(),
     database.loadingLists.toArray(),
     database.loadingItems.toArray(),
@@ -17,7 +18,7 @@ export async function buildBackup(database: AppDatabase = db): Promise<V2Backup>
     schemaVersion: V2_BACKUP_SCHEMA_VERSION,
     backupId: crypto.randomUUID(),
     exportedAt: new Date().toISOString(),
-    data: { clients, jobs, groups, fieldTemplates, loadingLists, loadingItems, workers, stays }
+    data: { clients, jobs, groups, groupPeriods, fieldTemplates, loadingLists, loadingItems, workers, stays }
   };
 }
 
@@ -51,6 +52,7 @@ export async function restoreBackup(backup: V2Backup, database: AppDatabase = db
       database.clients,
       database.jobs,
       database.groups,
+      database.groupPeriods,
       database.fieldTemplates,
       database.loadingLists,
       database.loadingItems,
@@ -62,6 +64,7 @@ export async function restoreBackup(backup: V2Backup, database: AppDatabase = db
         database.clients.clear(),
         database.jobs.clear(),
         database.groups.clear(),
+        database.groupPeriods.clear(),
         database.fieldTemplates.clear(),
         database.loadingLists.clear(),
         database.loadingItems.clear(),
@@ -70,6 +73,7 @@ export async function restoreBackup(backup: V2Backup, database: AppDatabase = db
       ]);
       if (backup.data.clients.length) await database.clients.bulkAdd(backup.data.clients);
       if (backup.data.groups.length) await database.groups.bulkAdd(backup.data.groups);
+      if (backup.data.groupPeriods.length) await database.groupPeriods.bulkAdd(backup.data.groupPeriods);
       if (backup.data.jobs.length) await database.jobs.bulkAdd(backup.data.jobs);
       if (backup.data.fieldTemplates.length) await database.fieldTemplates.bulkAdd(backup.data.fieldTemplates);
       if (backup.data.loadingLists.length) await database.loadingLists.bulkAdd(backup.data.loadingLists);
