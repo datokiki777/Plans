@@ -57,13 +57,13 @@ export function BackupPanel() {
 
   return (
     <Card className="backup-panel">
-      <h2>Export V2 backup</h2>
-      <p className="backup-panel__hint">ჩამოტვირთე ამჟამინდელი V2 მონაცემების JSON ასლი.</p>
+      <h2>Export backup</h2>
+      <p className="backup-panel__hint">ჩამოტვირთე ამჟამინდელი მონაცემების JSON ასლი.</p>
       <Button onClick={() => void handleExport()}>Export backup</Button>
 
-      <h2 className="backup-panel__restore-title">Restore V2 backup</h2>
+      <h2 className="backup-panel__restore-title">Restore backup</h2>
       <p className="backup-panel__hint">
-        <strong>ეს წაშლის და ჩაანაცვლებს ყველა ამჟამინდელ მონაცემს.</strong> ცალკე ფუნქციაა V1 იმპორტისგან.
+        <strong>ეს წაშლის და ჩაანაცვლებს ყველა ამჟამინდელ მონაცემს.</strong>
       </p>
       <input
         ref={fileInputRef}
