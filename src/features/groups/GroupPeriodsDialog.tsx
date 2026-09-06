@@ -205,7 +205,9 @@ export function GroupPeriodsDialog({ group, onClose }: GroupPeriodsDialogProps) 
                   </div>
                 </div>
                 {(() => {
-                  const linkedJobs = groupJobs.filter((j) => jobOverlapsPeriod(j, period));
+                  const linkedJobs = groupJobs
+                    .filter((j) => jobOverlapsPeriod(j, period))
+                    .sort((a, b) => (b.jobDate ?? "").localeCompare(a.jobDate ?? ""));
                   return linkedJobs.length > 0 ? (
                     <ul className="group-periods__jobs">
                       {linkedJobs.map((j) => (
