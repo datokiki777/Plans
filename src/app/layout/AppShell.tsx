@@ -26,7 +26,7 @@ export function AppShell() {
     <div className="app-shell">
       <header className="app-shell__topbar">
         <span className="app-shell__brand">Plans</span>
-        <IconButton label="მეტი" onClick={toggleSecondaryMenu}>
+        <IconButton label="მეტი" onClick={toggleSecondaryMenu} className="app-shell__menu-button">
           ⋯
         </IconButton>
       </header>
