@@ -5,12 +5,12 @@ import { Card } from "@/shared/ui/Card";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
+import { GroupPill } from "@/shared/ui/GroupPill";
 import { useToast } from "@/shared/ui/Toast";
 import { jobRepository, groupRepository, groupPeriodRepository, workerRepository, stayRepository, loadingRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted, isJobUpcomingOrOngoing } from "@/entities/job";
 import type { Group } from "@/entities/group";
-import { formatGroupLabel } from "@/entities/group";
 import type { GroupPeriod } from "@/entities/group-period";
 import { findPeriodForJob } from "@/entities/group-period";
 import { currentPeriodInfo } from "@/entities/stay";
@@ -68,7 +68,9 @@ function JobRow({
               {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
             </span>
           )}
-          {group && <span className="dashboard__row-group">{formatGroupLabel(group, findPeriodForJob(job, periods))}</span>}
+          {group && (
+            <GroupPill group={group} periodOverride={findPeriodForJob(job, periods)} className="dashboard__row-group" longClassName="dashboard__row-group--long" />
+          )}
         </div>
       </Link>
       <ShareIconButton

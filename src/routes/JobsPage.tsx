@@ -9,6 +9,7 @@ import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { useToast } from "@/shared/ui/Toast";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import { SelectField } from "@/shared/ui/SelectField";
+import { GroupPill } from "@/shared/ui/GroupPill";
 import { useJobs } from "@/features/jobs/useJobs";
 import { useJobsFilterStore, type JobsListTab } from "@/features/jobs/useJobsFilterStore";
 import { JobForm } from "@/features/jobs/JobForm";
@@ -135,9 +136,12 @@ export default function JobsPage() {
                   {job.jobDurationDays ? ` · ${job.jobDurationDays} დღიანი` : ""}
                 </p>
                 {job.groupId && groupsById.get(job.groupId) && (
-                  <span className="jobs-page__row-group">
-                    {formatGroupLabel(groupsById.get(job.groupId)!, findPeriodForJob(job, periods))}
-                  </span>
+                  <GroupPill
+                    group={groupsById.get(job.groupId)!}
+                    periodOverride={findPeriodForJob(job, periods)}
+                    className="jobs-page__row-group"
+                    longClassName="jobs-page__row-group--long"
+                  />
                 )}
               </div>
             </Link>

@@ -57,4 +57,20 @@ describe("formatGroupLabel", () => {
     const periodOverride = { carNumber: 2, worker1Name: "გიო", worker2Name: "" };
     expect(formatGroupLabel(group, periodOverride)).toBe("🚐 2 · 108 · გიო");
   });
+
+  it("the exact reported bug: a period with empty car/worker fields falls back to the group's own values per-field, instead of blanking everything", () => {
+    // A real scenario: the period predates this feature (or was simply
+    // never filled in), so its own carNumber/worker fields are still the
+    // v6 migration defaults (null/""), even though the group itself has
+    // real car+worker info.
+    const group = { name: "D1", carNumber: 108, worker1Name: "გიო", worker2Name: "ელიბო" };
+    const emptyPeriod = { carNumber: null, worker1Name: "", worker2Name: "" };
+    expect(formatGroupLabel(group, emptyPeriod)).toBe("🚐 108 · D1 · გიო, ელიბო");
+  });
+
+  it("merges per-field: a period with only SOME fields set still falls back individually for the rest", () => {
+    const group = { name: "D1", carNumber: 108, worker1Name: "გიო", worker2Name: "ელიბო" };
+    const partialPeriod = { carNumber: 5, worker1Name: "", worker2Name: "" }; // only the car was reassigned for this period
+    expect(formatGroupLabel(group, partialPeriod)).toBe("🚐 5 · D1 · გიო, ელიბო");
+  });
 });
