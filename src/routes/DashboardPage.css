@@ -54,6 +54,15 @@
   border-color: var(--color-danger);
 }
 
+.dashboard__row--loading {
+  background: var(--color-warn-soft);
+  border-color: var(--color-warn);
+}
+
+.dashboard__row-meta--loading {
+  color: var(--color-warn);
+}
+
 .dashboard__row-link {
   flex: 1 1 auto;
   min-width: 0;

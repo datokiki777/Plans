@@ -15,6 +15,8 @@ import { useJobsFilterStore, type JobsListTab } from "@/features/jobs/useJobsFil
 import { JobForm } from "@/features/jobs/JobForm";
 import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
+import { LoadingShareCard } from "@/features/loading/LoadingShareCard";
+import { useLoadingShare } from "@/features/loading/useLoadingShare";
 import { groupRepository, groupPeriodRepository, jobRepository, loadingRepository } from "@/db/repositories";
 import type { Group } from "@/entities/group";
 import { formatGroupLabel } from "@/entities/group";
@@ -60,6 +62,7 @@ export default function JobsPage() {
   const jobs = selectedPeriod ? jobsBeforePeriodFilter.filter((j) => jobOverlapsPeriod(j, selectedPeriod)) : jobsBeforePeriodFilter;
   const showToast = useToast();
   const { cardRef, activeJob, sharing, share } = useJobShare();
+  const { cardRef: loadingCardRef, activeList, activeItems, sharing: loadingSharing, share: shareLoading } = useLoadingShare();
   const today = useMemo(() => todayDateOnly(), []);
 
   useEffect(() => {
@@ -141,6 +144,18 @@ export default function JobsPage() {
     }
   };
 
+  const handleShareLoading = async (list: LoadingList) => {
+    try {
+      const outcome = await shareLoading(list);
+      if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
+      else if (outcome === "downloaded-only")
+        showToast("სურათი ჩამოიტვირთა. ეს მოწყობილობა/ბრაუზერი პირდაპირ გაზიარებას ვერ უჭერს მხარს.", "warn");
+    } catch (error) {
+      console.error("Loading share failed:", error);
+      showToast("გაზიარება ვერ განხორციელდა, სცადე თავიდან.", "warn");
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -197,8 +212,8 @@ export default function JobsPage() {
       <div className="jobs-page__list">
         {entries.map((entry) =>
           entry.kind === "loading" ? (
-            <Link key={`loading-${entry.list.id}`} to="/loading" state={{ openListId: entry.list.id }} className="jobs-page__row-link-wrapper">
-              <Card className="jobs-page__row jobs-page__row--loading">
+            <Card key={`loading-${entry.list.id}`} className="jobs-page__row jobs-page__row--loading">
+              <Link to="/loading" state={{ openListId: entry.list.id }} className="jobs-page__row-link">
                 <div className="jobs-page__row-head">
                   <strong>🚚 {entry.list.title}</strong>
                   {entry.list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
@@ -213,8 +228,18 @@ export default function JobsPage() {
                     />
                   )}
                 </div>
-              </Card>
-            </Link>
+              </Link>
+              <div className="jobs-page__row-actions">
+                <ShareIconButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    void handleShareLoading(entry.list);
+                  }}
+                  disabled={loadingSharing}
+                />
+              </div>
+            </Card>
           ) : (
             <Card
               key={entry.job.id}
@@ -265,6 +290,7 @@ export default function JobsPage() {
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
       <JobShareCard ref={cardRef} job={activeJob} />
+      <LoadingShareCard ref={loadingCardRef} title={activeList?.title ?? ""} items={activeItems} specialNote={activeList?.specialNote} />
     </div>
   );
 }

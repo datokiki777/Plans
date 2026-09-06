@@ -15,14 +15,17 @@ import type { GroupPeriod } from "@/entities/group-period";
 import { findPeriodForJob } from "@/entities/group-period";
 import { currentPeriodInfo } from "@/entities/stay";
 import type { LoadingList } from "@/entities/loading-list";
+import { isDatedLoadingList } from "@/entities/loading-list";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
 import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
+import { LoadingShareCard } from "@/features/loading/LoadingShareCard";
+import { useLoadingShare } from "@/features/loading/useLoadingShare";
 import "./DashboardPage.css";
 
 interface DashboardData {
   activeCount: number;
-  upcoming: Job[];
+  upcomingEntries: DashboardEntry[];
   recent: Job[];
   groupsById: Map<string, Group>;
   periods: GroupPeriod[];
@@ -31,6 +34,33 @@ interface DashboardData {
   recentLoadingLists: LoadingList[];
   groupHighlightDates: Map<string, string>;
   today: string;
+}
+
+type DashboardEntry = { kind: "job"; job: Job } | { kind: "loading"; list: LoadingList };
+
+function LoadingRow({ list, group, onShare, sharing }: { list: LoadingList; group?: Group; onShare: (list: LoadingList) => void; sharing: boolean }) {
+  return (
+    <Card className="dashboard__row dashboard__row--loading">
+      <Link to="/loading" state={{ openListId: list.id }} className="dashboard__row-link">
+        <div className="dashboard__row-head">
+          <strong>🚚 {list.title}</strong>
+          {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
+        </div>
+        <div className="dashboard__row-sub">
+          <span className="dashboard__row-meta dashboard__row-meta--loading">{formatDateOnly(list.loadingDate)} · დატვირთვა</span>
+          {group && <GroupPill group={group} className="dashboard__row-group" longClassName="dashboard__row-group--long" />}
+        </div>
+      </Link>
+      <ShareIconButton
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onShare(list);
+        }}
+        disabled={sharing}
+      />
+    </Card>
+  );
 }
 
 function JobRow({
@@ -89,6 +119,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const showToast = useToast();
   const { cardRef, activeJob, sharing, share } = useJobShare();
+  const { cardRef: loadingCardRef, activeList, activeItems, sharing: loadingSharing, share: shareLoading } = useLoadingShare();
 
   useEffect(() => {
     let cancelled = false;
@@ -105,9 +136,17 @@ export default function DashboardPage() {
       ]);
 
       const today = todayDateOnly();
-      const upcoming = activeJobs
-        .filter((j) => isJobUpcomingOrOngoing(j, today))
-        .sort((a, b) => (a.jobDate as string).localeCompare(b.jobDate as string))
+      const upcomingJobs = activeJobs.filter((j) => isJobUpcomingOrOngoing(j, today));
+      const upcomingLoadingLists = recentLoadingLists.filter((l) => isDatedLoadingList(l) && (l.loadingDate as string) >= today);
+      const upcomingEntries: DashboardEntry[] = [
+        ...upcomingJobs.map((job): DashboardEntry => ({ kind: "job", job })),
+        ...upcomingLoadingLists.map((list): DashboardEntry => ({ kind: "loading", list }))
+      ]
+        .sort((a, b) => {
+          const dateA = a.kind === "job" ? (a.job.jobDate ?? "") : (a.list.loadingDate ?? "");
+          const dateB = b.kind === "job" ? (b.job.jobDate ?? "") : (b.list.loadingDate ?? "");
+          return dateA.localeCompare(dateB);
+        })
         .slice(0, 5);
       const groupHighlightDates = computeGroupHighlightDates(allJobsForHighlight, today);
 
@@ -120,7 +159,7 @@ export default function DashboardPage() {
       if (!cancelled) {
         setData({
           activeCount,
-          upcoming,
+          upcomingEntries,
           recent,
           groupsById: new Map(groups.map((g) => [g.id, g])),
           periods,
@@ -152,6 +191,18 @@ export default function DashboardPage() {
     }
   };
 
+  const handleShareLoading = async (list: LoadingList) => {
+    try {
+      const outcome = await shareLoading(list);
+      if (outcome === "shared") showToast("გაზიარება გაიხსნა.", "ok");
+      else if (outcome === "downloaded-only")
+        showToast("სურათი ჩამოიტვირთა. ეს მოწყობილობა/ბრაუზერი პირდაპირ გაზიარებას ვერ უჭერს მხარს.", "warn");
+    } catch (error) {
+      console.error("Loading share failed:", error);
+      showToast("გაზიარება ვერ განხორციელდა, სცადე თავიდან.", "warn");
+    }
+  };
+
   return (
     <div>
       <PageHeader eyebrow="Plans" title="მთავარი" />
@@ -173,22 +224,32 @@ export default function DashboardPage() {
 
       <section className="dashboard__section">
         <h2>მოახლოებული სამუშაოები</h2>
-        {data.upcoming.length === 0 ? (
+        {data.upcomingEntries.length === 0 ? (
           <EmptyState title="მოახლოებული სამუშაო არ არის" />
         ) : (
           <div className="dashboard__list">
-            {data.upcoming.map((job) => (
-              <JobRow
-                key={job.id}
-                job={job}
-                group={job.groupId ? data.groupsById.get(job.groupId) : undefined}
-                periods={data.periods}
-                onShare={handleShare}
-                sharing={sharing}
-                groupHighlightDates={data.groupHighlightDates}
-                today={data.today}
-              />
-            ))}
+            {data.upcomingEntries.map((entry) =>
+              entry.kind === "loading" ? (
+                <LoadingRow
+                  key={`loading-${entry.list.id}`}
+                  list={entry.list}
+                  group={entry.list.groupId ? data.groupsById.get(entry.list.groupId) : undefined}
+                  onShare={handleShareLoading}
+                  sharing={loadingSharing}
+                />
+              ) : (
+                <JobRow
+                  key={entry.job.id}
+                  job={entry.job}
+                  group={entry.job.groupId ? data.groupsById.get(entry.job.groupId) : undefined}
+                  periods={data.periods}
+                  onShare={handleShare}
+                  sharing={sharing}
+                  groupHighlightDates={data.groupHighlightDates}
+                  today={data.today}
+                />
+              )
+            )}
           </div>
         )}
       </section>
@@ -228,6 +289,7 @@ export default function DashboardPage() {
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
       <JobShareCard ref={cardRef} job={activeJob} />
+      <LoadingShareCard ref={loadingCardRef} title={activeList?.title ?? ""} items={activeItems} specialNote={activeList?.specialNote} />
     </div>
   );
 }

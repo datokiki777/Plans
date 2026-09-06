@@ -138,11 +138,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
   };
 
   const handleSave = async () => {
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      showToast("სათაური აუცილებელია.", "warn");
-      return;
-    }
+    const trimmedTitle = title.trim() || groups.find((g) => g.id === groupId)?.name || "დატვირთვა";
     setSaving(true);
     try {
       let listId = list?.id ?? null;
