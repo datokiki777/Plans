@@ -80,6 +80,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
   const [groups, setGroups] = useState<Group[]>([]);
   const [groupId, setGroupId] = useState("");
   const [title, setTitle] = useState("");
+  const [loadingDate, setLoadingDate] = useState("");
   const [specialNote, setSpecialNote] = useState("");
   const [drafts, setDrafts] = useState<Record<LoadingCategory, Draft[]>>({ trays: [], glass: [], panels: [], extras: [] });
   const [saving, setSaving] = useState(false);
@@ -91,12 +92,14 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
     if (!list) {
       setGroupId("");
       setTitle("");
+      setLoadingDate("");
       setSpecialNote("");
       setDrafts({ trays: [], glass: [], panels: [], extras: [] });
       return;
     }
     setGroupId(list.groupId ?? "");
     setTitle(list.title);
+    setLoadingDate(list.loadingDate ?? "");
     setSpecialNote(list.specialNote);
     loadingRepository.listItems(list.id).then((items) => {
       const grouped: Record<LoadingCategory, Draft[]> = { trays: [], glass: [], panels: [], extras: [] };
@@ -144,12 +147,18 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
     try {
       let listId = list?.id ?? null;
       if (!listId) {
-        const created = await loadingRepository.createList({ title: trimmedTitle, specialNote: specialNote.trim(), groupId: groupId || null });
+        const created = await loadingRepository.createList({
+          title: trimmedTitle,
+          specialNote: specialNote.trim(),
+          groupId: groupId || null,
+          loadingDate: loadingDate || null
+        });
         listId = created.id;
       } else {
         await loadingRepository.renameList(listId, trimmedTitle);
         await loadingRepository.setSpecialNote(listId, specialNote.trim());
         await loadingRepository.setGroupId(listId, groupId || null);
+        await loadingRepository.setLoadingDate(listId, loadingDate || null);
         const existing = await loadingRepository.listItems(listId);
         await Promise.all(existing.map((it) => loadingRepository.deleteItem(it.id)));
       }
@@ -203,6 +212,10 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
         <span className="ui-form-field__label">სათაური</span>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="მაგ. კლიენტის სახელი ან მისამართი" />
       </label>
+
+      <FormField label="თარიღი" hint="არჩევის შემთხვევაში ეს სია სამუშაოების გვერდზეც გამოჩნდება">
+        <Input type="date" value={loadingDate} onChange={(e) => setLoadingDate(e.target.value)} />
+      </FormField>
 
       {CATEGORIES.map((cat) => (
         <div key={cat.key} className="loading-dialog__category">

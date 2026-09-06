@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { SearchInput } from "@/shared/ui/SearchInput";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -30,10 +31,26 @@ export default function LoadingPage() {
   const showToast = useToast();
   const confirm = useConfirm();
   const { cardRef, activeList, activeItems, sharing, share } = useLoadingShare();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     groupRepository.list().then(setGroups);
   }, []);
+
+  // A "🚚" job card on the Jobs page links here with the specific list's id
+  // in router state - open that list's view dialog directly instead of
+  // just landing on the generic Loading page. Cleared from history state
+  // immediately after so it doesn't re-trigger on back/forward navigation.
+  useEffect(() => {
+    const openListId = (location.state as { openListId?: string } | null)?.openListId;
+    if (!openListId) return;
+    loadingRepository.getList(openListId).then((list) => {
+      if (list) setViewTarget(list);
+    });
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const handleArchive = async (list: LoadingList) => {
     await loadingRepository.archiveList(list.id);

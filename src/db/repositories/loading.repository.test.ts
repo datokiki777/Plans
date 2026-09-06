@@ -64,8 +64,19 @@ describe("LocalLoadingRepository", () => {
     expect((await repo.getList(list.id))?.specialNote).toBe("საჭიროა ავტოამწე");
   });
 
+  it("createList defaults loadingDate to null, setLoadingDate updates it", async () => {
+    const list = await repo.createList({ title: "108" });
+    expect(list.loadingDate).toBeNull();
+
+    await repo.setLoadingDate(list.id, "2026-09-05");
+    expect((await repo.getList(list.id))?.loadingDate).toBe("2026-09-05");
+
+    await repo.setLoadingDate(list.id, null);
+    expect((await repo.getList(list.id))?.loadingDate).toBeNull();
+  });
+
   it("duplicateList copies title (with suffix) and all items into a new list", async () => {
-    const original = await repo.createList({ title: "ორიგინალი", specialNote: "მნიშვნელოვანი შენიშვნა" });
+    const original = await repo.createList({ title: "ორიგინალი", specialNote: "მნიშვნელოვანი შენიშვნა", loadingDate: "2026-09-05" });
     await repo.addItem({ loadingListId: original.id, category: "glass", note: "შუშა 100სმ", doorInfo: "PK90" });
     await repo.addItem({ loadingListId: original.id, category: "extras", name: "დამატება", quantity: "2" });
 
@@ -73,6 +84,7 @@ describe("LocalLoadingRepository", () => {
     expect(copy.id).not.toBe(original.id);
     expect(copy.title).toContain("ორიგინალი");
     expect(copy.specialNote).toBe("მნიშვნელოვანი შენიშვნა");
+    expect(copy.loadingDate).toBe("2026-09-05");
 
     const copiedItems = await repo.listItems(copy.id);
     expect(copiedItems).toHaveLength(2);

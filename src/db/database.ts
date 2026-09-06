@@ -158,6 +158,20 @@ export class AppDatabase extends Dexie {
           }
         });
     });
+
+    // Version 7: adds LoadingList.loadingDate - once set, the list shows
+    // up as a job-like card on the Jobs page for that date - not indexed
+    // (no "loading lists by date" query yet), so a plain backfill.
+    this.version(7).upgrade(async (tx) => {
+      await tx
+        .table("loadingLists")
+        .toCollection()
+        .modify((list: { loadingDate?: unknown }) => {
+          if (list.loadingDate === undefined) {
+            list.loadingDate = null;
+          }
+        });
+    });
   }
 }
 

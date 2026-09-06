@@ -10,6 +10,7 @@ export interface LoadingRepository {
   renameList(id: string, title: string): Promise<void>;
   setSpecialNote(id: string, specialNote: string): Promise<void>;
   setGroupId(id: string, groupId: string | null): Promise<void>;
+  setLoadingDate(id: string, loadingDate: string | null): Promise<void>;
   archiveList(id: string): Promise<void>;
   restoreList(id: string): Promise<void>;
   deleteList(id: string): Promise<void>;
@@ -46,7 +47,7 @@ export class LocalLoadingRepository implements LoadingRepository {
 
   async createList(input: NewLoadingListInput): Promise<LoadingList> {
     const now = nowIso();
-    const list: LoadingList = { specialNote: "", groupId: null, ...input, id: createId(), createdAt: now, updatedAt: now, archivedAt: null };
+    const list: LoadingList = { specialNote: "", groupId: null, loadingDate: null, ...input, id: createId(), createdAt: now, updatedAt: now, archivedAt: null };
     await this.db.loadingLists.add(list);
     return list;
   }
@@ -63,6 +64,10 @@ export class LocalLoadingRepository implements LoadingRepository {
     await this.db.loadingLists.update(id, { groupId, updatedAt: nowIso() });
   }
 
+  async setLoadingDate(id: string, loadingDate: string | null): Promise<void> {
+    await this.db.loadingLists.update(id, { loadingDate, updatedAt: nowIso() });
+  }
+
   async archiveList(id: string): Promise<void> {
     await this.db.loadingLists.update(id, { archivedAt: nowIso(), updatedAt: nowIso() });
   }
@@ -75,7 +80,12 @@ export class LocalLoadingRepository implements LoadingRepository {
     const original = await this.getList(id);
     if (!original) throw new Error(`Loading list ${id} not found`);
     const items = await this.listItems(id);
-    const copy = await this.createList({ title: `${original.title} (ასლი)`, specialNote: original.specialNote, groupId: original.groupId });
+    const copy = await this.createList({
+      title: `${original.title} (ასლი)`,
+      specialNote: original.specialNote,
+      groupId: original.groupId,
+      loadingDate: original.loadingDate
+    });
     for (const item of items) {
       await this.addItem({
         loadingListId: copy.id,

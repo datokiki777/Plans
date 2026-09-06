@@ -55,6 +55,21 @@
   border-color: var(--color-danger);
 }
 
+.jobs-page__row-link-wrapper {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.jobs-page__row--loading {
+  background: var(--color-warn-soft);
+  border-color: var(--color-warn);
+}
+
+.jobs-page__row-meta--loading {
+  color: var(--color-warn);
+}
+
 .jobs-page__row-link {
   flex: 1 1 auto;
   min-width: 0;
