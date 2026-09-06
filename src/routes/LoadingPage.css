@@ -32,8 +32,16 @@
 .loading-page__row-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-2);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.loading-page__row-head-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
 }
 
 .loading-page__row-group {
@@ -44,8 +52,6 @@
   border-radius: 999px;
   padding: 1px 8px;
   white-space: nowrap;
-  display: inline-block;
-  margin-bottom: var(--space-2);
 }
 
 .loading-page__row-group--long {

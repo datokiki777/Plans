@@ -117,12 +117,6 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
     });
   }, [open, list]);
 
-  const handleSelectGroup = (id: string) => {
-    setGroupId(id);
-    const picked = groups.find((g) => g.id === id);
-    if (picked) setTitle(picked.name);
-  };
-
   const insertRowAt = (category: LoadingCategory, index: number) => {
     setDrafts((prev) => {
       const list = [...prev[category as "trays"]];
@@ -198,7 +192,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
       <FormField label="ჯგუფი">
         <SelectField
           value={groupId}
-          onChange={handleSelectGroup}
+          onChange={setGroupId}
           placeholder="— აირჩიე ჯგუფი —"
           title="ჯგუფის არჩევა"
           options={groups.map((g) => ({ value: g.id, label: formatGroupLabel(g) }))}

@@ -97,15 +97,17 @@ export default function LoadingPage() {
             <button type="button" className="loading-page__row-tap" onClick={() => setViewTarget(list)}>
               <div className="loading-page__row-head">
                 <strong>{list.title}</strong>
-                {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
+                <div className="loading-page__row-head-right">
+                  {list.groupId && groupsById.get(list.groupId) && (
+                    <GroupPill
+                      group={groupsById.get(list.groupId)!}
+                      className="loading-page__row-group"
+                      longClassName="loading-page__row-group--long"
+                    />
+                  )}
+                  {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
+                </div>
               </div>
-              {list.groupId && groupsById.get(list.groupId) && (
-                <GroupPill
-                  group={groupsById.get(list.groupId)!}
-                  className="loading-page__row-group"
-                  longClassName="loading-page__row-group--long"
-                />
-              )}
             </button>
             <div className="loading-page__row-actions">
               <ShareIconButton onClick={() => void handleShare(list)} disabled={sharing} />
