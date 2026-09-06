@@ -33,7 +33,24 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.loading-page__row-group {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+  display: inline-block;
   margin-bottom: var(--space-2);
+}
+
+.loading-page__row-group--long {
+  font-size: 9.5px;
+  padding: 1px 7px;
 }
 
 .loading-page__row-actions {

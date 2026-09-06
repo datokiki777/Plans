@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { SearchInput } from "@/shared/ui/SearchInput";
 import { EmptyState } from "@/shared/ui/EmptyState";
@@ -8,13 +8,15 @@ import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { useToast } from "@/shared/ui/Toast";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
-import { loadingRepository } from "@/db/repositories";
+import { GroupPill } from "@/shared/ui/GroupPill";
+import { loadingRepository, groupRepository } from "@/db/repositories";
 import { useLoadingLists } from "@/features/loading/useLoadingLists";
 import { LoadingListDialog } from "@/features/loading/LoadingListDialog";
 import { LoadingListViewDialog } from "@/features/loading/LoadingListViewDialog";
 import { LoadingShareCard } from "@/features/loading/LoadingShareCard";
 import { useLoadingShare } from "@/features/loading/useLoadingShare";
 import type { LoadingList } from "@/entities/loading-list";
+import type { Group } from "@/entities/group";
 import "./LoadingPage.css";
 
 export default function LoadingPage() {
@@ -23,9 +25,15 @@ export default function LoadingPage() {
   const { lists, reload } = useLoadingLists(query, { includeArchived });
   const [editTarget, setEditTarget] = useState<LoadingList | null | undefined>(undefined);
   const [viewTarget, setViewTarget] = useState<LoadingList | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const groupsById = new Map(groups.map((g) => [g.id, g]));
   const showToast = useToast();
   const confirm = useConfirm();
   const { cardRef, activeList, activeItems, sharing, share } = useLoadingShare();
+
+  useEffect(() => {
+    groupRepository.list().then(setGroups);
+  }, []);
 
   const handleArchive = async (list: LoadingList) => {
     await loadingRepository.archiveList(list.id);
@@ -91,6 +99,13 @@ export default function LoadingPage() {
                 <strong>{list.title}</strong>
                 {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
               </div>
+              {list.groupId && groupsById.get(list.groupId) && (
+                <GroupPill
+                  group={groupsById.get(list.groupId)!}
+                  className="loading-page__row-group"
+                  longClassName="loading-page__row-group--long"
+                />
+              )}
             </button>
             <div className="loading-page__row-actions">
               <ShareIconButton onClick={() => void handleShare(list)} disabled={sharing} />
