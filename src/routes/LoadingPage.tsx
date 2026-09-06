@@ -18,6 +18,7 @@ import { LoadingShareCard } from "@/features/loading/LoadingShareCard";
 import { useLoadingShare } from "@/features/loading/useLoadingShare";
 import type { LoadingList } from "@/entities/loading-list";
 import type { Group } from "@/entities/group";
+import { formatDateOnly } from "@/shared/lib/date";
 import "./LoadingPage.css";
 
 export default function LoadingPage() {
@@ -114,16 +115,17 @@ export default function LoadingPage() {
             <button type="button" className="loading-page__row-tap" onClick={() => setViewTarget(list)}>
               <div className="loading-page__row-head">
                 <strong>{list.title}</strong>
-                <div className="loading-page__row-head-right">
-                  {list.groupId && groupsById.get(list.groupId) && (
-                    <GroupPill
-                      group={groupsById.get(list.groupId)!}
-                      className="loading-page__row-group"
-                      longClassName="loading-page__row-group--long"
-                    />
-                  )}
-                  {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
-                </div>
+                {list.archivedAt && <StatusBadge label="დაარქივებული" tone="danger" />}
+              </div>
+              <div className="loading-page__row-sub">
+                {list.loadingDate && <span className="loading-page__row-meta">{formatDateOnly(list.loadingDate)} · დატვირთვა</span>}
+                {list.groupId && groupsById.get(list.groupId) && (
+                  <GroupPill
+                    group={groupsById.get(list.groupId)!}
+                    className="loading-page__row-group"
+                    longClassName="loading-page__row-group--long"
+                  />
+                )}
               </div>
             </button>
             <div className="loading-page__row-actions">
