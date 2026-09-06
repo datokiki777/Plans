@@ -24,7 +24,14 @@
 }
 
 .jobs-page__group-filter {
+  display: flex;
+  gap: var(--space-2);
   margin-bottom: var(--space-3);
+}
+
+.jobs-page__group-filter > * {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .jobs-page__list {

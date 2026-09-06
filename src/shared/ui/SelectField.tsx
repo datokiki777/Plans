@@ -47,7 +47,7 @@ export function SelectField({
         onClick={() => setOpen(true)}
         disabled={disabled}
       >
-        <span className={current ? "" : "select-field__placeholder"}>{current?.label ?? placeholder}</span>
+        <span className={`select-field__label${current ? "" : " select-field__placeholder"}`}>{current?.label ?? placeholder}</span>
         <span className="select-field__chevron" aria-hidden="true">
           ▾
         </span>

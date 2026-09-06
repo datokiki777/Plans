@@ -19,6 +19,14 @@
   cursor: default;
 }
 
+.select-field__label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 .select-field__placeholder {
   color: var(--color-muted);
 }

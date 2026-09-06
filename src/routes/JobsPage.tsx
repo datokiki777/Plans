@@ -19,7 +19,7 @@ import { groupRepository, groupPeriodRepository, jobRepository } from "@/db/repo
 import type { Group } from "@/entities/group";
 import { formatGroupLabel } from "@/entities/group";
 import type { GroupPeriod } from "@/entities/group-period";
-import { findPeriodForJob } from "@/entities/group-period";
+import { findPeriodForJob, isPeriodActiveToday, jobOverlapsPeriod } from "@/entities/group-period";
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES, computeGroupHighlightDates, isJobRowHighlighted, type Job } from "@/entities/job";
 import { formatDateOnly, todayDateOnly } from "@/shared/lib/date";
 import "./JobsPage.css";
@@ -41,9 +41,16 @@ export default function JobsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const groupsById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
   const [periods, setPeriods] = useState<GroupPeriod[]>([]);
+  const [periodId, setPeriodId] = useState("");
+  const periodsForSelectedGroup = useMemo(() => periods.filter((p) => p.groupId === groupId), [periods, groupId]);
+  const selectedPeriod = periodsForSelectedGroup.find((p) => p.id === periodId);
   const [groupHighlightDates, setGroupHighlightDates] = useState<Map<string, string>>(new Map());
   const [formOpen, setFormOpen] = useState(false);
-  const { jobs, reload } = useJobs({ tab, groupId: groupId || undefined, query });
+  const { jobs: jobsBeforePeriodFilter, reload } = useJobs({ tab, groupId: groupId || undefined, query });
+  // The period picker is a further, purely date-based narrowing on top of
+  // whatever the tab/group/search already produced - a job's status
+  // (active/archived) never affects whether it belongs to a period.
+  const jobs = selectedPeriod ? jobsBeforePeriodFilter.filter((j) => jobOverlapsPeriod(j, selectedPeriod)) : jobsBeforePeriodFilter;
   const showToast = useToast();
   const { cardRef, activeJob, sharing, share } = useJobShare();
   const today = useMemo(() => todayDateOnly(), []);
@@ -52,6 +59,13 @@ export default function JobsPage() {
     groupRepository.list().then(setGroups);
     groupPeriodRepository.listAll().then(setPeriods);
   }, []);
+
+  // A period only makes sense for the group it belongs to - if the group
+  // selection changes (including clearing it back to "ყველა ჯგუფი"), any
+  // previously-selected period no longer applies.
+  useEffect(() => {
+    setPeriodId("");
+  }, [groupId]);
 
   useEffect(() => {
     // Each group finds its own "next up" date independently - one group
@@ -95,6 +109,18 @@ export default function JobsPage() {
           placeholder="ყველა ჯგუფი"
           title="ჯგუფის მიხედვით გაფილტვრა"
           options={groups.map((g) => ({ value: g.id, label: formatGroupLabel(g), highlight: groupHighlightDates.has(g.id) }))}
+        />
+        <SelectField
+          value={periodId}
+          onChange={setPeriodId}
+          placeholder="ყველა პერიოდი"
+          title="პერიოდის მიხედვით გაფილტვრა"
+          disabled={!groupId}
+          options={periodsForSelectedGroup.map((p) => ({
+            value: p.id,
+            label: `${formatDateOnly(p.startDate)} — ${formatDateOnly(p.endDate)}`,
+            highlight: isPeriodActiveToday(p, today)
+          }))}
         />
       </div>
 

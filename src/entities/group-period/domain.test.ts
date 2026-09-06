@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jobOverlapsPeriod, findPeriodForJob, isJobDateAllowedForGroup } from "./domain";
+import { jobOverlapsPeriod, findPeriodForJob, isJobDateAllowedForGroup, isPeriodActiveToday } from "./domain";
 import type { GroupPeriod } from "./types";
 
 function period(overrides: Partial<GroupPeriod> = {}): GroupPeriod {
@@ -105,5 +105,20 @@ describe("isJobDateAllowedForGroup", () => {
 
   it("is always allowed when the job has no date yet, even if the group has periods", () => {
     expect(isJobDateAllowedForGroup({ jobDate: null, jobDurationDays: null }, [period()])).toBe(true);
+  });
+});
+
+describe("isPeriodActiveToday", () => {
+  it("is true when today falls within the period, inclusive of both boundaries", () => {
+    const p = period({ startDate: "2026-09-01", endDate: "2026-09-05" });
+    expect(isPeriodActiveToday(p, "2026-09-01")).toBe(true);
+    expect(isPeriodActiveToday(p, "2026-09-03")).toBe(true);
+    expect(isPeriodActiveToday(p, "2026-09-05")).toBe(true);
+  });
+
+  it("is false before the period starts or after it ends", () => {
+    const p = period({ startDate: "2026-09-01", endDate: "2026-09-05" });
+    expect(isPeriodActiveToday(p, "2026-08-31")).toBe(false);
+    expect(isPeriodActiveToday(p, "2026-09-06")).toBe(false);
   });
 });

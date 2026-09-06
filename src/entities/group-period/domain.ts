@@ -40,3 +40,12 @@ export function isJobDateAllowedForGroup(job: { jobDate: string | null; jobDurat
   if (!job.jobDate || groupPeriods.length === 0) return true;
   return groupPeriods.some((p) => jobOverlapsPeriod(job, p));
 }
+
+/** Whether a period is currently in progress - purely today's date
+ * falling within [startDate, endDate], with no regard at all to any
+ * job's status (active/archived). Used to highlight the "currently
+ * happening" period in the Jobs page's period picker, the same green
+ * highlight already used for groups/jobs elsewhere. */
+export function isPeriodActiveToday(period: Pick<GroupPeriod, "startDate" | "endDate">, today: string): boolean {
+  return today >= period.startDate && today <= period.endDate;
+}
