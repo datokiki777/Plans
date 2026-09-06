@@ -9,7 +9,7 @@ export function useLoadingLists(query: string, opts: { includeArchived?: boolean
 
   useEffect(() => {
     let cancelled = false;
-    const task = query.trim() ? loadingRepository.searchLists(query) : loadingRepository.listLists(opts);
+    const task = query.trim() ? loadingRepository.searchLists(query, { includeArchived: opts.includeArchived }) : loadingRepository.listLists(opts);
     task.then((result) => {
       if (!cancelled) setLists(result);
     });

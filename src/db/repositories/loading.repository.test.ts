@@ -113,7 +113,7 @@ describe("LocalLoadingRepository", () => {
     expect(await repo.listItems(list.id)).toHaveLength(0);
   });
 
-  it("searchLists matches by title, excludes archived", async () => {
+  it("searchLists matches by title, excludes archived by default", async () => {
     await repo.createList({ title: "გიორგის სახლი" });
     const archived = await repo.createList({ title: "გიორგის ბინა" });
     await repo.archiveList(archived.id);
@@ -121,5 +121,15 @@ describe("LocalLoadingRepository", () => {
     const results = await repo.searchLists("გიორგი");
     expect(results).toHaveLength(1);
     expect(results[0]?.title).toBe("გიორგის სახლი");
+  });
+
+  it("searchLists includes archived when includeArchived is set - the exact reported bug", async () => {
+    await repo.createList({ title: "გიორგის სახლი" });
+    const archived = await repo.createList({ title: "გიორგის ბინა" });
+    await repo.archiveList(archived.id);
+
+    const results = await repo.searchLists("გიორგი", { includeArchived: true });
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.title).sort()).toEqual(["გიორგის ბინა", "გიორგის სახლი"].sort());
   });
 });

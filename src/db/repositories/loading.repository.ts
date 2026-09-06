@@ -16,7 +16,7 @@ export interface LoadingRepository {
   restoreList(id: string): Promise<void>;
   deleteList(id: string): Promise<void>;
   duplicateList(id: string): Promise<LoadingList>;
-  searchLists(query: string, opts?: { limit?: number }): Promise<LoadingList[]>;
+  searchLists(query: string, opts?: { limit?: number; includeArchived?: boolean }): Promise<LoadingList[]>;
 
   listItems(loadingListId: string): Promise<LoadingItem[]>;
   addItem(input: NewLoadingItemInput): Promise<LoadingItem>;
@@ -115,12 +115,12 @@ export class LocalLoadingRepository implements LoadingRepository {
     return copy;
   }
 
-  async searchLists(query: string, opts: { limit?: number } = {}): Promise<LoadingList[]> {
+  async searchLists(query: string, opts: { limit?: number; includeArchived?: boolean } = {}): Promise<LoadingList[]> {
     const q = query.trim().toLocaleLowerCase("ka");
     if (!q) return [];
     const limit = opts.limit ?? 20;
     return this.db.loadingLists
-      .filter((l) => l.archivedAt === null && l.title.toLocaleLowerCase("ka").includes(q))
+      .filter((l) => (opts.includeArchived || l.archivedAt === null) && l.title.toLocaleLowerCase("ka").includes(q))
       .limit(limit)
       .toArray();
   }
