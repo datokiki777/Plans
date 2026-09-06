@@ -13,6 +13,8 @@ import type { Group } from "@/entities/group";
 import { formatGroupLabel } from "@/entities/group";
 import { useFieldTemplates } from "@/features/templates/useFieldTemplates";
 import { TemplateFieldButton } from "@/features/templates/TemplateFieldButton";
+import { normalizeMapsLink } from "@/shared/lib/maps";
+import { getDefaultLoadingMapsLink, setDefaultLoadingMapsLink } from "@/shared/lib/loadingMapsLinkDefault";
 import "./LoadingListDialog.css";
 
 interface Draft {
@@ -81,6 +83,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
   const [groupId, setGroupId] = useState("");
   const [title, setTitle] = useState("");
   const [loadingDate, setLoadingDate] = useState("");
+  const [mapsLink, setMapsLink] = useState("");
   const [specialNote, setSpecialNote] = useState("");
   const [drafts, setDrafts] = useState<Record<LoadingCategory, Draft[]>>({ trays: [], glass: [], panels: [], extras: [] });
   const [saving, setSaving] = useState(false);
@@ -93,6 +96,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
       setGroupId("");
       setTitle("");
       setLoadingDate("");
+      setMapsLink(getDefaultLoadingMapsLink());
       setSpecialNote("");
       setDrafts({ trays: [], glass: [], panels: [], extras: [] });
       return;
@@ -100,6 +104,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
     setGroupId(list.groupId ?? "");
     setTitle(list.title);
     setLoadingDate(list.loadingDate ?? "");
+    setMapsLink(list.mapsLink);
     setSpecialNote(list.specialNote);
     loadingRepository.listItems(list.id).then((items) => {
       const grouped: Record<LoadingCategory, Draft[]> = { trays: [], glass: [], panels: [], extras: [] };
@@ -139,6 +144,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
 
   const handleSave = async () => {
     const trimmedTitle = title.trim() || groups.find((g) => g.id === groupId)?.name || "დატვირთვა";
+    const normalizedMapsLink = normalizeMapsLink(mapsLink);
     setSaving(true);
     try {
       let listId = list?.id ?? null;
@@ -147,7 +153,8 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
           title: trimmedTitle,
           specialNote: specialNote.trim(),
           groupId: groupId || null,
-          loadingDate: loadingDate || null
+          loadingDate: loadingDate || null,
+          mapsLink: normalizedMapsLink
         });
         listId = created.id;
       } else {
@@ -155,9 +162,11 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
         await loadingRepository.setSpecialNote(listId, specialNote.trim());
         await loadingRepository.setGroupId(listId, groupId || null);
         await loadingRepository.setLoadingDate(listId, loadingDate || null);
+        await loadingRepository.setMapsLink(listId, normalizedMapsLink);
         const existing = await loadingRepository.listItems(listId);
         await Promise.all(existing.map((it) => loadingRepository.deleteItem(it.id)));
       }
+      if (normalizedMapsLink) setDefaultLoadingMapsLink(normalizedMapsLink);
       for (const category of CATEGORIES) {
         for (const draft of drafts[category.key as "trays"]) {
           if (!draft.name.trim() && !draft.note.trim()) continue; // skip fully-empty rows
@@ -277,6 +286,10 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
           )}
         </div>
       ))}
+
+      <FormField label="Google Maps ლინკი" hint="დამახსოვრდება, როგორც ავტომატური მნიშვნელობა შემდეგი ახალი სიისთვის">
+        <Input type="url" value={mapsLink} onChange={(e) => setMapsLink(e.target.value)} placeholder="მაგ. საწყობის მისამართი ან რუკის ლინკი" />
+      </FormField>
     </Dialog>
   );
 }

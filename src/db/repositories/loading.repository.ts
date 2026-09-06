@@ -11,6 +11,7 @@ export interface LoadingRepository {
   setSpecialNote(id: string, specialNote: string): Promise<void>;
   setGroupId(id: string, groupId: string | null): Promise<void>;
   setLoadingDate(id: string, loadingDate: string | null): Promise<void>;
+  setMapsLink(id: string, mapsLink: string): Promise<void>;
   archiveList(id: string): Promise<void>;
   restoreList(id: string): Promise<void>;
   deleteList(id: string): Promise<void>;
@@ -47,7 +48,17 @@ export class LocalLoadingRepository implements LoadingRepository {
 
   async createList(input: NewLoadingListInput): Promise<LoadingList> {
     const now = nowIso();
-    const list: LoadingList = { specialNote: "", groupId: null, loadingDate: null, ...input, id: createId(), createdAt: now, updatedAt: now, archivedAt: null };
+    const list: LoadingList = {
+      specialNote: "",
+      groupId: null,
+      loadingDate: null,
+      mapsLink: "",
+      ...input,
+      id: createId(),
+      createdAt: now,
+      updatedAt: now,
+      archivedAt: null
+    };
     await this.db.loadingLists.add(list);
     return list;
   }
@@ -68,6 +79,10 @@ export class LocalLoadingRepository implements LoadingRepository {
     await this.db.loadingLists.update(id, { loadingDate, updatedAt: nowIso() });
   }
 
+  async setMapsLink(id: string, mapsLink: string): Promise<void> {
+    await this.db.loadingLists.update(id, { mapsLink, updatedAt: nowIso() });
+  }
+
   async archiveList(id: string): Promise<void> {
     await this.db.loadingLists.update(id, { archivedAt: nowIso(), updatedAt: nowIso() });
   }
@@ -84,7 +99,8 @@ export class LocalLoadingRepository implements LoadingRepository {
       title: `${original.title} (ასლი)`,
       specialNote: original.specialNote,
       groupId: original.groupId,
-      loadingDate: original.loadingDate
+      loadingDate: original.loadingDate,
+      mapsLink: original.mapsLink
     });
     for (const item of items) {
       await this.addItem({

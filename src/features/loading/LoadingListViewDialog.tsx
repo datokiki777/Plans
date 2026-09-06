@@ -85,6 +85,11 @@ export function LoadingListViewDialog({ list, onClose, onEdit }: LoadingListView
             <p>{list.specialNote.trim()}</p>
           </section>
         )}
+        {list.mapsLink && (
+          <a href={list.mapsLink} target="_blank" rel="noopener noreferrer" className="loading-view__maps-link">
+            📍 რუკის გახსნა
+          </a>
+        )}
       </div>
     </Dialog>
   );

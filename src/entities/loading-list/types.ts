@@ -11,6 +11,10 @@ export interface LoadingList {
    * too), distinctly styled so it's clear at a glance it's a loading
    * list, not a shower job. Added in schema version 7. */
   loadingDate: string | null; // "YYYY-MM-DD"
+  /** Optional Google Maps link (pre-normalized, same as
+   * Client.googleMapsLink) - shown as a tappable "open the map" link.
+   * Added in schema version 8. */
+  mapsLink: string;
   /** A single, fixed, always-last note field - separate from the
    * repeatable extras items (no quantity, just free text), meant for a
    * recurring important reminder that should stand out visually and be
@@ -22,4 +26,4 @@ export interface LoadingList {
   archivedAt: string | null;
 }
 
-export type NewLoadingListInput = Pick<LoadingList, "title"> & Partial<Pick<LoadingList, "specialNote" | "groupId" | "loadingDate">>;
+export type NewLoadingListInput = Pick<LoadingList, "title"> & Partial<Pick<LoadingList, "specialNote" | "groupId" | "loadingDate" | "mapsLink">>;

@@ -75,8 +75,21 @@ describe("LocalLoadingRepository", () => {
     expect((await repo.getList(list.id))?.loadingDate).toBeNull();
   });
 
+  it("createList defaults mapsLink to empty string, setMapsLink updates it", async () => {
+    const list = await repo.createList({ title: "108" });
+    expect(list.mapsLink).toBe("");
+
+    await repo.setMapsLink(list.id, "https://maps.google.com/?q=warehouse");
+    expect((await repo.getList(list.id))?.mapsLink).toBe("https://maps.google.com/?q=warehouse");
+  });
+
   it("duplicateList copies title (with suffix) and all items into a new list", async () => {
-    const original = await repo.createList({ title: "ორიგინალი", specialNote: "მნიშვნელოვანი შენიშვნა", loadingDate: "2026-09-05" });
+    const original = await repo.createList({
+      title: "ორიგინალი",
+      specialNote: "მნიშვნელოვანი შენიშვნა",
+      loadingDate: "2026-09-05",
+      mapsLink: "https://maps.google.com/?q=warehouse"
+    });
     await repo.addItem({ loadingListId: original.id, category: "glass", note: "შუშა 100სმ", doorInfo: "PK90" });
     await repo.addItem({ loadingListId: original.id, category: "extras", name: "დამატება", quantity: "2" });
 
@@ -85,6 +98,7 @@ describe("LocalLoadingRepository", () => {
     expect(copy.title).toContain("ორიგინალი");
     expect(copy.specialNote).toBe("მნიშვნელოვანი შენიშვნა");
     expect(copy.loadingDate).toBe("2026-09-05");
+    expect(copy.mapsLink).toBe("https://maps.google.com/?q=warehouse");
 
     const copiedItems = await repo.listItems(copy.id);
     expect(copiedItems).toHaveLength(2);

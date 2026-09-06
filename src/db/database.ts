@@ -172,6 +172,20 @@ export class AppDatabase extends Dexie {
           }
         });
     });
+
+    // Version 8: adds LoadingList.mapsLink - a tappable Google Maps link,
+    // same pre-normalized-URL pattern as Client.googleMapsLink - not
+    // indexed, so a plain backfill.
+    this.version(8).upgrade(async (tx) => {
+      await tx
+        .table("loadingLists")
+        .toCollection()
+        .modify((list: { mapsLink?: unknown }) => {
+          if (list.mapsLink === undefined) {
+            list.mapsLink = "";
+          }
+        });
+    });
   }
 }
 

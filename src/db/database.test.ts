@@ -24,7 +24,7 @@ describe("AppDatabase", () => {
 
     await testDb.open();
 
-    expect(testDb.verno).toBe(7);
+    expect(testDb.verno).toBe(8);
     expect(testDb.tables.map((t) => t.name).sort()).toEqual(
       [
         "clients",
@@ -93,7 +93,7 @@ describe("AppDatabase", () => {
     openDatabases.push(upgraded);
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(7);
+    expect(upgraded.verno).toBe(8);
     const migratedJob = await upgraded.jobs.get("legacy-job-1");
     expect(migratedJob?.statusBeforeArchive).toBeNull();
     expect(migratedJob?.status).toBe("archived"); // untouched by the migration itself
@@ -284,6 +284,45 @@ describe("AppDatabase", () => {
     const migratedList = await upgraded.loadingLists.get("list-legacy-v6");
     expect(migratedList?.loadingDate).toBeNull();
     expect(migratedList?.title).toBe("108"); // untouched by the migration itself
+  });
+
+  it("migrates an existing pre-version-8 database: backfills LoadingList.mapsLink", async () => {
+    const dbName = `test-migration-v8-${crypto.randomUUID()}`;
+
+    const legacyDb = new Dexie(dbName);
+    legacyDb.version(7).stores({
+      clients: "id, fullName, archivedAt",
+      jobs: "id, clientId, groupId, status, jobDate, [groupId+status]",
+      groups: "id, name, archivedAt",
+      fieldTemplates: "id, fieldKey, [fieldKey+sortOrder]",
+      loadingLists: "id, archivedAt",
+      loadingItems: "id, loadingListId, [loadingListId+category]",
+      workers: "id, archivedAt",
+      stays: "id, workerId, [workerId+entryDate]",
+      groupPeriods: "id, groupId, [groupId+startDate]",
+      migrationRecords: "id, sourceExportId"
+    });
+    await legacyDb.open();
+    await legacyDb.table("loadingLists").add({
+      id: "list-legacy-v7",
+      title: "108",
+      groupId: "g1",
+      loadingDate: "2026-09-05",
+      specialNote: "",
+      // no mapsLink at all - the real pre-v8 shape
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      archivedAt: null
+    });
+    legacyDb.close();
+
+    const upgraded = new AppDatabase(dbName);
+    openDatabases.push(upgraded);
+    await upgraded.open();
+
+    const migratedList = await upgraded.loadingLists.get("list-legacy-v7");
+    expect(migratedList?.mapsLink).toBe("");
+    expect(migratedList?.loadingDate).toBe("2026-09-05"); // untouched by the migration itself
   });
 
   it("can write and read a record in each table (basic round-trip)", async () => {

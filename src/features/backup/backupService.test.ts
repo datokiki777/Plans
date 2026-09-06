@@ -220,7 +220,7 @@ describe("backupService", () => {
         groupPeriods: [],
         fieldTemplates: [],
         loadingLists: [
-          { id: "list-1", title: "108", groupId: "g1", loadingDate: null, specialNote: "", createdAt: "2026-01-01", updatedAt: "2026-01-01", archivedAt: null }
+          { id: "list-1", title: "108", groupId: "g1", loadingDate: null, mapsLink: "", specialNote: "", createdAt: "2026-01-01", updatedAt: "2026-01-01", archivedAt: null }
         ],
         loadingItems: [],
         workers: [],
