@@ -180,47 +180,49 @@ export function GroupPeriodsDialog({ group, onClose }: GroupPeriodsDialogProps) 
         </p>
         {periods.length === 0 && !adding && <p className="group-periods__empty">პერიოდი ჯერ არ არის დამატებული.</p>}
 
-        {periods.map((period) =>
-          editingId === period.id ? (
-            <div key={period.id}>{editForm(cancelEdit, () => void saveEdit(period.id))}</div>
-          ) : (
-            <div key={period.id} className="group-periods__row">
-              <div className="group-periods__row-head">
-                <div>
-                  <span className="group-periods__range">
-                    {formatDateOnly(period.startDate)} — {formatDateOnly(period.endDate)}
-                  </span>
-                  {(period.carNumber !== null || period.worker1Name || period.worker2Name) && (
-                    <p className="group-periods__period-details">{formatGroupLabel(group, period)}</p>
-                  )}
+        <div className="group-periods__list">
+          {periods.map((period) =>
+            editingId === period.id ? (
+              <div key={period.id}>{editForm(cancelEdit, () => void saveEdit(period.id))}</div>
+            ) : (
+              <div key={period.id} className="group-periods__row">
+                <div className="group-periods__row-head">
+                  <div>
+                    <span className="group-periods__range">
+                      {formatDateOnly(period.startDate)} — {formatDateOnly(period.endDate)}
+                    </span>
+                    {(period.carNumber !== null || period.worker1Name || period.worker2Name) && (
+                      <p className="group-periods__period-details">{formatGroupLabel(group, period)}</p>
+                    )}
+                  </div>
+                  <div className="group-periods__row-actions">
+                    <IconButton label="რედაქტირება" onClick={() => startEdit(period)}>
+                      ✎
+                    </IconButton>
+                    <IconButton label="წაშლა" onClick={() => void handleDelete(period)}>
+                      ×
+                    </IconButton>
+                  </div>
                 </div>
-                <div className="group-periods__row-actions">
-                  <IconButton label="რედაქტირება" onClick={() => startEdit(period)}>
-                    ✎
-                  </IconButton>
-                  <IconButton label="წაშლა" onClick={() => void handleDelete(period)}>
-                    ×
-                  </IconButton>
-                </div>
+                {(() => {
+                  const linkedJobs = groupJobs.filter((j) => jobOverlapsPeriod(j, period));
+                  return linkedJobs.length > 0 ? (
+                    <ul className="group-periods__jobs">
+                      {linkedJobs.map((j) => (
+                        <li key={j.id}>
+                          {j.clientSnapshot.fullName || "უსახელო სამუშაო"}
+                          {j.jobDate ? ` (${formatDateOnly(j.jobDate)})` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="group-periods__jobs-empty">ამ პერიოდში სამუშაო არ ჩანს.</p>
+                  );
+                })()}
               </div>
-              {(() => {
-                const linkedJobs = groupJobs.filter((j) => jobOverlapsPeriod(j, period));
-                return linkedJobs.length > 0 ? (
-                  <ul className="group-periods__jobs">
-                    {linkedJobs.map((j) => (
-                      <li key={j.id}>
-                        {j.clientSnapshot.fullName || "უსახელო სამუშაო"}
-                        {j.jobDate ? ` (${formatDateOnly(j.jobDate)})` : ""}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="group-periods__jobs-empty">ამ პერიოდში სამუშაო არ ჩანს.</p>
-                );
-              })()}
-            </div>
-          )
-        )}
+            )
+          )}
+        </div>
 
         {adding && editForm(cancelEdit, () => void saveNew())}
 
