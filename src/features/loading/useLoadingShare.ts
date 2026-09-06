@@ -3,6 +3,7 @@ import { loadingRepository } from "@/db/repositories";
 import type { LoadingList } from "@/entities/loading-list";
 import { buildLoadingShareFilename } from "@/entities/loading-list";
 import type { LoadingItem } from "@/entities/loading-item";
+import { normalizeMapsLink } from "@/shared/lib/maps";
 import { generateElementImageBlob, shareImage, type ShareOutcome } from "@/services/ShareService";
 
 /** Single reusable offscreen card + share flow for the whole Loading list
@@ -30,7 +31,7 @@ export function useLoadingShare() {
         blob,
         filename: buildLoadingShareFilename(list),
         title: list.title || "დატვირთვის სია",
-        shareText: ""
+        shareText: list.mapsLink ? normalizeMapsLink(list.mapsLink) : ""
       });
     } finally {
       setSharing(false);
