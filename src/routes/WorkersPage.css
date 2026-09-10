@@ -33,7 +33,24 @@
 .workers-page__row-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.workers-page__days-pill {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-ok);
+  background: var(--color-surface);
+  border: 1px solid var(--color-ok);
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.workers-page__days-pill--outside {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .workers-page__row--inside {
@@ -50,6 +67,7 @@
   font-size: var(--text-xs);
   font-weight: 700;
   color: var(--color-ok);
+  margin-left: auto;
 }
 
 .workers-page__status--out {

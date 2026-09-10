@@ -111,6 +111,14 @@ export default function WorkersPage() {
           <Card key={w.id} className={`workers-page__row${w.info.inside ? " workers-page__row--inside" : " workers-page__row--outside"}`}>
             <div className="workers-page__row-head">
               <strong>{w.name}</strong>
+              {w.info.inside && w.info.remainingDays !== null && (
+                <span className="workers-page__days-pill">{w.info.remainingDays} დღე დარჩა</span>
+              )}
+              {!w.info.inside && w.info.backDate && (
+                <span className="workers-page__days-pill workers-page__days-pill--outside">
+                  {Math.max(0, diffDays(todayDateOnly(), w.info.backDate))} დღე დაბრუნებამდე
+                </span>
+              )}
               <span className={`workers-page__status${w.info.inside ? "" : " workers-page__status--out"}`}>
                 {w.info.inside ? "● ქვეყანაშია" : "○ გასულია"}
               </span>
