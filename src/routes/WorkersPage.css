@@ -46,6 +46,7 @@
   border-radius: 999px;
   padding: 2px 10px;
   white-space: nowrap;
+  margin-left: auto;
 }
 
 .workers-page__days-pill--outside {
@@ -67,7 +68,6 @@
   font-size: var(--text-xs);
   font-weight: 700;
   color: var(--color-ok);
-  margin-left: auto;
 }
 
 .workers-page__status--out {
