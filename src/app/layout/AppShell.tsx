@@ -1,7 +1,5 @@
 import { Suspense } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { useAppUiStore } from "@/app/providers/appUiStore";
-import { IconButton } from "@/shared/ui/IconButton";
 import "./AppShell.css";
 
 const PRIMARY_NAV = [
@@ -11,35 +9,26 @@ const PRIMARY_NAV = [
   { to: "/periods", label: "პერიოდები", icon: "👷" }
 ];
 
-const SECONDARY_NAV = [
+const TOP_NAV = [
   { to: "/groups", label: "ჯგუფები" },
   { to: "/templates", label: "შაბლონები" },
   { to: "/settings", label: "პარამეტრები" }
 ];
 
 export function AppShell() {
-  const secondaryMenuOpen = useAppUiStore((s) => s.secondaryMenuOpen);
-  const toggleSecondaryMenu = useAppUiStore((s) => s.toggleSecondaryMenu);
-  const closeSecondaryMenu = useAppUiStore((s) => s.closeSecondaryMenu);
-
   return (
     <div className="app-shell">
       <header className="app-shell__topbar">
-        <span className="app-shell__brand">Plans</span>
-        <IconButton label="მეტი" onClick={toggleSecondaryMenu} className="app-shell__menu-button">
-          ⋯
-        </IconButton>
+        {TOP_NAV.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) => `app-shell__top-link${isActive ? " app-shell__top-link--active" : ""}`}
+          >
+            {item.label}
+          </NavLink>
+        ))}
       </header>
-
-      {secondaryMenuOpen && (
-        <nav className="app-shell__secondary-menu" aria-label="დამატებითი ნავიგაცია">
-          {SECONDARY_NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} onClick={closeSecondaryMenu} className="app-shell__secondary-link">
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      )}
 
       <main className="app-shell__content">
         <Suspense fallback={<div className="app-shell__loading">იტვირთება…</div>}>

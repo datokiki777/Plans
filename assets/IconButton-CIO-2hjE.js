@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CznXPbDH.js";var t=e();function n({label:e,children:n,className:r=``,type:i=`button`,...a}){return(0,t.jsx)(`button`,{type:i,"aria-label":e,title:e,className:`ui-icon-button ${r}`.trim(),...a,children:n})}export{n as t};
