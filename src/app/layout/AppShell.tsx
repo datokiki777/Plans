@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { isOnSection } from "./navigation";
 import "./AppShell.css";
 
 const PRIMARY_NAV = [
@@ -16,18 +17,33 @@ const TOP_NAV = [
 ];
 
 export function AppShell() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   return (
     <div className="app-shell">
       <header className="app-shell__topbar">
-        {TOP_NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) => `app-shell__top-link${isActive ? " app-shell__top-link--active" : ""}`}
-          >
-            {item.label}
-          </NavLink>
-        ))}
+        {TOP_NAV.map((item) => {
+          const active = isOnSection(location.pathname, item.to);
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={`app-shell__top-link${active ? " app-shell__top-link--active" : ""}`}
+              onClick={(e) => {
+                // A toggle, not a plain link: tapping the already-open
+                // section closes it back to home instead of doing
+                // nothing (the default for a link to the current route).
+                if (active) {
+                  e.preventDefault();
+                  navigate("/");
+                }
+              }}
+            >
+              {item.label}
+            </NavLink>
+          );
+        })}
       </header>
 
       <main className="app-shell__content">
