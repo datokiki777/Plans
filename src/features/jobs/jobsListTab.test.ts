@@ -72,7 +72,7 @@ describe("fetchJobsForTab (Jobs page data fetching)", () => {
     expect(result.map((j) => j.id)).toEqual([activeLater.id, archivedNearer.id]);
   });
 
-  it('"all" sorts each status block independently by nearest-date-first', async () => {
+  it('"all" sorts the active block nearest-date-first and the archived block newest-date-first (independently)', async () => {
     const client = await clients.create({ fullName: "x", address: "", phone: "", googleMapsLink: "", notes: "" });
     const activeFar = await jobs.create({ ...base({ clientId: client.id }), status: "active", jobDate: "2026-08-15" });
     const activeNear = await jobs.create({ ...base({ clientId: client.id }), status: "active", jobDate: "2026-01-01" });
@@ -80,6 +80,16 @@ describe("fetchJobsForTab (Jobs page data fetching)", () => {
     const archivedNear = await jobs.create({ ...base({ clientId: client.id }), status: "archived", jobDate: "2026-03-01" });
 
     const result = await fetchJobsForTab("all", undefined, jobs);
-    expect(result.map((j) => j.id)).toEqual([activeNear.id, activeFar.id, archivedNear.id, archivedFar.id]);
+    expect(result.map((j) => j.id)).toEqual([activeNear.id, activeFar.id, archivedFar.id, archivedNear.id]);
+  });
+
+  it('"archived" tab sorts by jobDate descending - most recently dated first, the exact reported request', async () => {
+    const client = await clients.create({ fullName: "x", address: "", phone: "", googleMapsLink: "", notes: "" });
+    const old = await jobs.create({ ...base({ clientId: client.id }), status: "archived", jobDate: "2026-01-01" });
+    const yesterday = await jobs.create({ ...base({ clientId: client.id }), status: "archived", jobDate: "2026-09-16" });
+    const today = await jobs.create({ ...base({ clientId: client.id }), status: "archived", jobDate: "2026-09-17" });
+
+    const result = await fetchJobsForTab("archived", undefined, jobs);
+    expect(result.map((j) => j.id)).toEqual([today.id, yesterday.id, old.id]);
   });
 });

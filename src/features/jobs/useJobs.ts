@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { jobRepository as defaultJobRepository } from "@/db/repositories";
 import type { JobRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
-import { compareByJobDateAsc } from "@/entities/job";
+import { compareByJobDateAsc, compareByJobDateDesc } from "@/entities/job";
 import type { JobsListTab } from "./useJobsFilterStore";
 
 export interface JobsFilter {
@@ -11,29 +11,33 @@ export interface JobsFilter {
   query?: string;
 }
 
-/** The Jobs page always shows nearest-scheduled-date first (ascending),
- * regardless of tab - applied explicitly here rather than relying on
- * JobRepository.list()'s generic default sort (which stays createdAt-desc,
- * correct for other callers like Dashboard's "recently changed" list that
- * have nothing to do with jobDate). `repo` is injectable (defaults to the
- * app singleton) so this exact logic is directly testable against an
- * isolated database, same pattern used elsewhere in the app. */
+/** The Jobs page shows nearest-scheduled-date first (ascending) for
+ * active work, but newest-date first (descending) for archived work -
+ * "what did we most recently finish" is what's actually useful to see at
+ * the top of a list of done jobs, the reverse of "what's coming up next".
+ * Applied explicitly here rather than relying on JobRepository.list()'s
+ * generic default sort (which stays createdAt-desc, correct for other
+ * callers like Dashboard's "recently changed" list that have nothing to
+ * do with jobDate). `repo` is injectable (defaults to the app singleton)
+ * so this exact logic is directly testable against an isolated database,
+ * same pattern used elsewhere in the app. */
 export async function fetchJobsForTab(tab: JobsListTab, groupId?: string, repo: JobRepository = defaultJobRepository): Promise<Job[]> {
   if (tab === "active" || tab === "archived") {
     const result = await repo.list({ status: tab, groupId, limit: 100 });
-    return result.sort(compareByJobDateAsc);
+    return result.sort(tab === "archived" ? compareByJobDateDesc : compareByJobDateAsc);
   }
   // "all" = active + archived combined, per the simplified Jobs page - not
   // literally every status (planned/completed jobs, if any, are not shown
   // here; they remain reachable/editable from the Job detail screen).
   // Active jobs are always shown before archived ones (each block sorted
-  // independently, nearest-date-first) - not merged into one global sort,
-  // which would interleave the two statuses together.
+  // independently, active nearest-date-first, archived newest-date-first) -
+  // not merged into one global sort, which would interleave the two
+  // statuses together.
   const [active, archived] = await Promise.all([
     repo.list({ status: "active", groupId, limit: 100 }),
     repo.list({ status: "archived", groupId, limit: 100 })
   ]);
-  return [...active.sort(compareByJobDateAsc), ...archived.sort(compareByJobDateAsc)];
+  return [...active.sort(compareByJobDateAsc), ...archived.sort(compareByJobDateDesc)];
 }
 
 export function useJobs(filter: JobsFilter) {

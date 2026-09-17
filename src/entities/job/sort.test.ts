@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareByJobDateAsc } from "./sort";
+import { compareByJobDateAsc, compareByJobDateDesc } from "./sort";
 import type { Job } from "./types";
 
 function job(overrides: Partial<Job>): Job {
@@ -48,5 +48,25 @@ describe("compareByJobDateAsc", () => {
     const older = job({ id: "a", jobDate: null, createdAt: "2026-01-01T00:00:00.000Z" });
     const newer = job({ id: "b", jobDate: null, createdAt: "2026-08-15T00:00:00.000Z" });
     expect([newer, older].sort(compareByJobDateAsc).map((j) => j.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("compareByJobDateDesc", () => {
+  it("sorts by jobDate, newest first - for archived jobs (most recently done at the top)", () => {
+    const older = job({ id: "a", jobDate: "2026-01-01" });
+    const newer = job({ id: "b", jobDate: "2026-08-15" });
+    expect([older, newer].sort(compareByJobDateDesc).map((j) => j.id)).toEqual(["b", "a"]);
+  });
+
+  it("puts jobs WITH a date before jobs with no date, regardless of createdAt", () => {
+    const dated = job({ id: "a", jobDate: "2020-01-01", createdAt: "2020-01-01T00:00:00.000Z" });
+    const undated = job({ id: "b", jobDate: null, createdAt: "2026-08-15T00:00:00.000Z" });
+    expect([undated, dated].sort(compareByJobDateDesc).map((j) => j.id)).toEqual(["a", "b"]);
+  });
+
+  it("falls back to createdAt (descending) when neither job has a date", () => {
+    const older = job({ id: "a", jobDate: null, createdAt: "2026-01-01T00:00:00.000Z" });
+    const newer = job({ id: "b", jobDate: null, createdAt: "2026-08-15T00:00:00.000Z" });
+    expect([older, newer].sort(compareByJobDateDesc).map((j) => j.id)).toEqual(["b", "a"]);
   });
 });

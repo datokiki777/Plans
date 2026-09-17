@@ -126,8 +126,9 @@ export default function JobsPage() {
       archived: list.archivedAt !== null
     }));
     const byDateAsc = (a: JobsPageEntry, b: JobsPageEntry) => a.sortDate.localeCompare(b.sortDate);
+    const byDateDesc = (a: JobsPageEntry, b: JobsPageEntry) => b.sortDate.localeCompare(a.sortDate);
     const active = [...jobEntries, ...loadingEntries].filter((e) => !e.archived).sort(byDateAsc);
-    const archived = [...jobEntries, ...loadingEntries].filter((e) => e.archived).sort(byDateAsc);
+    const archived = [...jobEntries, ...loadingEntries].filter((e) => e.archived).sort(byDateDesc);
     return [...active, ...archived];
   }, [jobs, relevantLoadingLists]);
 
