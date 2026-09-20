@@ -4,8 +4,10 @@ import { PageHeader } from "@/shared/ui/PageHeader";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { EmptyState } from "@/shared/ui/EmptyState";
-import { jobRepository, correctionRepository } from "@/db/repositories";
+import { GroupPill } from "@/shared/ui/GroupPill";
+import { jobRepository, correctionRepository, groupRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
+import type { Group } from "@/entities/group";
 import { CORRECTION_STATUS_LABELS, type Correction } from "@/entities/correction";
 import { formatDateOnly } from "@/shared/lib/date";
 import { CorrectionDialog } from "@/features/corrections/CorrectionDialog";
@@ -14,6 +16,7 @@ import "./CorrectionsPage.css";
 export default function CorrectionsPage() {
   const { id } = useParams<{ id: string }>();
   const [job, setJob] = useState<Job | null | undefined>(undefined);
+  const [group, setGroup] = useState<Group | null>(null);
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [editTarget, setEditTarget] = useState<Correction | null>(null);
 
@@ -24,7 +27,11 @@ export default function CorrectionsPage() {
 
   useEffect(() => {
     if (!id) return;
-    jobRepository.getById(id).then((found) => setJob(found ?? null));
+    jobRepository.getById(id).then((found) => {
+      setJob(found ?? null);
+      if (found?.groupId) groupRepository.getById(found.groupId).then((g) => setGroup(g ?? null));
+      else setGroup(null);
+    });
     reload();
   }, [id, reload]);
 
@@ -52,9 +59,12 @@ export default function CorrectionsPage() {
         }
       />
 
-      <Link to={`/jobs/${id}`} className="corrections-page__back-link">
-        ← უკან სამუშაოზე
-      </Link>
+      <div className="corrections-page__meta-row">
+        <Link to={`/jobs/${id}`} className="corrections-page__back-link">
+          ← უკან სამუშაოზე
+        </Link>
+        {group && <GroupPill group={group} className="corrections-page__group" longClassName="corrections-page__group--long" />}
+      </div>
 
       {corrections.length === 0 && <EmptyState title="გამოსასწორებელი ჯერ არ არის" description="დაამატე პირველი ზემოთა ღილაკით." />}
 

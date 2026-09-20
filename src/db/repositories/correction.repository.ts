@@ -1,5 +1,6 @@
 import type { AppDatabase } from "@/db/database";
 import type { Correction, NewCorrectionInput, CorrectionStatus } from "@/entities/correction";
+import { compareCorrectionsForDisplay } from "@/entities/correction";
 import { createId, nowIso } from "@/shared/lib/id";
 
 export interface CorrectionUpdate {
@@ -39,12 +40,12 @@ export class LocalCorrectionRepository implements CorrectionRepository {
 
   async listByJob(jobId: string): Promise<Correction[]> {
     const list = await this.db.corrections.where("jobId").equals(jobId).toArray();
-    return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return list.sort(compareCorrectionsForDisplay);
   }
 
   async listAll(): Promise<Correction[]> {
     const list = await this.db.corrections.toArray();
-    return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return list.sort(compareCorrectionsForDisplay);
   }
 
   async create(input: NewCorrectionInput): Promise<Correction> {

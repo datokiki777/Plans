@@ -1,9 +1,30 @@
-.corrections-page__back-link {
-  display: inline-block;
+.corrections-page__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   margin-bottom: var(--space-3);
+}
+
+.corrections-page__back-link {
   color: var(--color-brand);
   font-weight: 700;
   text-decoration: none;
+}
+
+.corrections-page__group {
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.corrections-page__group--long {
+  font-size: 9.5px;
+  padding: 4px 7px;
 }
 
 .corrections-page__list {

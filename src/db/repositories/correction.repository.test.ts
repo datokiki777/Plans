@@ -43,6 +43,15 @@ describe("LocalCorrectionRepository", () => {
     expect(result.map((c) => c.id)).toEqual([newer.id, older.id]);
   });
 
+  it("listByJob sorts by status priority first (pending, fixed, not-applicable), then newest first within each", async () => {
+    const notApplicable = await repo.create({ jobId: "job-1", status: "not-applicable" });
+    const fixed = await repo.create({ jobId: "job-1", status: "fixed" });
+    const pending = await repo.create({ jobId: "job-1", status: "pending" });
+
+    const result = await repo.listByJob("job-1");
+    expect(result.map((c) => c.id)).toEqual([pending.id, fixed.id, notApplicable.id]);
+  });
+
   it("listAll returns corrections across every job", async () => {
     await repo.create({ jobId: "job-1" });
     await repo.create({ jobId: "job-2" });

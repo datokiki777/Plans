@@ -1,6 +1,7 @@
 .all-corrections-page__tabs {
   display: flex;
   gap: var(--space-2);
+  margin-top: var(--space-3);
   margin-bottom: var(--space-3);
   overflow-x: auto;
 }
@@ -54,6 +55,23 @@
   justify-content: space-between;
   gap: var(--space-2);
   margin-bottom: var(--space-1);
+}
+
+.all-corrections-page__group {
+  display: inline-block;
+  margin-bottom: var(--space-1);
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.all-corrections-page__group--long {
+  font-size: 9.5px;
+  padding: 4px 7px;
 }
 
 .all-corrections-page__status {
