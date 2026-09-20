@@ -91,7 +91,7 @@ export function LoadingListDialog({ open, onClose, list, onSaved }: LoadingListD
 
   useEffect(() => {
     if (!open) return;
-    groupRepository.list().then(setGroups);
+    groupRepository.list({ includeArchived: true }).then(setGroups);
     if (!list) {
       setGroupId("");
       setTitle("");

@@ -66,7 +66,7 @@ export default function JobsPage() {
   const today = useMemo(() => todayDateOnly(), []);
 
   useEffect(() => {
-    groupRepository.list().then(setGroups);
+    groupRepository.list({ includeArchived: true }).then(setGroups);
     groupPeriodRepository.listAll().then(setPeriods);
   }, []);
 

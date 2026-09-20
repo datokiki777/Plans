@@ -36,7 +36,7 @@ export default function LoadingPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    groupRepository.list().then(setGroups);
+    groupRepository.list({ includeArchived: true }).then(setGroups);
   }, []);
 
   // A "🚚" job card on the Jobs page links here with the specific list's id

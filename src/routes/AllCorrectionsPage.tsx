@@ -33,7 +33,7 @@ export default function AllCorrectionsPage() {
   useEffect(() => {
     correctionRepository.listAll().then(setCorrections);
     jobRepository.list({ limit: 1000 }).then((jobs) => setJobsById(new Map(jobs.map((j) => [j.id, j]))));
-    groupRepository.list().then(setGroups);
+    groupRepository.list({ includeArchived: true }).then(setGroups);
   }, []);
 
   // A correction has no group of its own - it's shown/filtered by its

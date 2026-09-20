@@ -19,7 +19,7 @@ import "./GroupsPage.css";
  * canPermanentlyDeleteGroup). Archiving now belongs to what actually
  * accumulates over time within a group: its periods and loading lists. */
 export default function GroupsPage() {
-  const { groups, reload } = useGroups({ includeArchived: false });
+  const { groups, reload } = useGroups({ includeArchived: true });
   const [newName, setNewName] = useState("");
   const [editTarget, setEditTarget] = useState<Group | null>(null);
   const [periodsTarget, setPeriodsTarget] = useState<Group | null>(null);

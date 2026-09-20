@@ -63,7 +63,7 @@ export function JobForm({ open, onClose, job, initialGroupId, onSaved }: JobForm
 
   useEffect(() => {
     if (!open) return;
-    groupRepository.list().then(setGroups);
+    groupRepository.list({ includeArchived: true }).then(setGroups);
     reset(job ? { ...jobToFormValues(job), googleMapsLink: "" } : { ...JOB_FORM_DEFAULTS, groupId: initialGroupId ?? "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, job, initialGroupId]);
