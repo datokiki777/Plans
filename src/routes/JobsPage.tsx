@@ -61,7 +61,7 @@ export default function JobsPage() {
   // (active/archived) never affects whether it belongs to a period.
   const jobs = selectedPeriod ? jobsBeforePeriodFilter.filter((j) => jobOverlapsPeriod(j, selectedPeriod)) : jobsBeforePeriodFilter;
   const showToast = useToast();
-  const { cardRef, activeJob, sharing, share } = useJobShare();
+  const { cardRef, activeJob, activeCorrections, sharing, share } = useJobShare();
   const { cardRef: loadingCardRef, activeList, activeItems, sharing: loadingSharing, share: shareLoading } = useLoadingShare();
   const today = useMemo(() => todayDateOnly(), []);
 
@@ -290,7 +290,7 @@ export default function JobsPage() {
       <JobForm open={formOpen} onClose={() => setFormOpen(false)} initialGroupId={groupId} onSaved={reload} />
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
-      <JobShareCard ref={cardRef} job={activeJob} />
+      <JobShareCard ref={cardRef} job={activeJob} corrections={activeCorrections} />
       <LoadingShareCard ref={loadingCardRef} title={activeList?.title ?? ""} items={activeItems} specialNote={activeList?.specialNote} />
     </div>
   );

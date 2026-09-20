@@ -7,7 +7,7 @@ import { StatusToggle } from "@/shared/ui/StatusToggle";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/Toast";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
-import { jobRepository, groupRepository } from "@/db/repositories";
+import { jobRepository, groupRepository, correctionRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
 import type { Group } from "@/entities/group";
 import { formatDateOnly } from "@/shared/lib/date";
@@ -64,7 +64,12 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
   const showToast = useToast();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
-  const { cardRef, activeJob, sharing, share } = useJobShare();
+  const { cardRef, activeJob, activeCorrections, sharing, share } = useJobShare();
+  const [pendingCorrections, setPendingCorrections] = useState(0);
+
+  useEffect(() => {
+    correctionRepository.listByJob(job.id).then((list) => setPendingCorrections(list.filter((c) => c.status === "pending").length));
+  }, [job.id]);
 
   const handleToggleStatus = async () => {
     if (job.status === "archived") {
@@ -114,6 +119,9 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
           onToggle={() => void handleToggleStatus()}
         />
         <ShareIconButton onClick={() => void handleShare()} disabled={sharing} />
+        <Button onClick={() => navigate(`/jobs/${job.id}/corrections`)}>
+          გამოსასწორებელი{pendingCorrections > 0 ? ` (${pendingCorrections})` : ""}
+        </Button>
         <Button onClick={() => setEditOpen(true)}>რედაქტ.</Button>
         <Button variant="danger" onClick={() => void handleDelete()}>
           წაშლა
@@ -168,7 +176,7 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
       <JobForm open={editOpen} onClose={() => setEditOpen(false)} job={job} onSaved={onReload} />
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
-      <JobShareCard ref={cardRef} job={activeJob} />
+      <JobShareCard ref={cardRef} job={activeJob} corrections={activeCorrections} />
     </div>
   );
 }

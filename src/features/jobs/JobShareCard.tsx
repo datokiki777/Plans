@@ -1,10 +1,13 @@
 import { forwardRef } from "react";
 import type { Job } from "@/entities/job";
 import { hasShareValue, formatJobShareSchedule } from "@/entities/job";
+import { CORRECTION_STATUS_LABELS, type Correction } from "@/entities/correction";
+import { formatDateOnly } from "@/shared/lib/date";
 import "./JobShareCard.css";
 
 export interface JobShareCardProps {
   job: Job | null;
+  corrections?: Correction[];
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -39,7 +42,7 @@ function ListField({ items }: { items: string[] }) {
 /** Same section layout/order as V1's buildPrintableReportContent, minus the
  * sketch (out of V2 scope). Every field/section is omitted entirely when
  * empty, matching V1's hasValue-driven omission. */
-export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(function JobShareCard({ job }, ref) {
+export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(function JobShareCard({ job, corrections = [] }, ref) {
   if (!job) return <div ref={ref} className="job-share-card" />;
 
   const schedule = formatJobShareSchedule(job);
@@ -107,6 +110,21 @@ export const JobShareCard = forwardRef<HTMLDivElement, JobShareCardProps>(functi
         <Section title="შენიშვნები">
           <ListField items={job.workNotes} />
         </Section>
+      )}
+
+      {corrections.length > 0 && (
+        <section className="job-share-card__corrections">
+          <h2>გამოსასწორებელი</h2>
+          <ul>
+            {corrections.map((c) => (
+              <li key={c.id}>
+                {CORRECTION_STATUS_LABELS[c.status]}
+                {c.comment ? ` — ${c.comment}` : ""}
+                {c.resolvedDate ? ` (${formatDateOnly(c.resolvedDate)})` : ""}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

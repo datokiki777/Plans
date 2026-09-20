@@ -164,6 +164,16 @@ export class LocalJobRepository implements JobRepository {
   }
 
   async delete(id: string): Promise<void> {
+    // Permanent delete cascades to this job's corrections (and their
+    // files) - the one place corrections are ever removed without an
+    // explicit per-correction delete. A simple archive leaves them
+    // completely untouched, same "archiving is always safe" rule as
+    // everything else in this app.
+    const correctionIds = await this.db.corrections.where("jobId").equals(id).primaryKeys();
+    if (correctionIds.length > 0) {
+      await this.db.correctionFiles.where("correctionId").anyOf(correctionIds).delete();
+    }
+    await this.db.corrections.where("jobId").equals(id).delete();
     await this.db.jobs.delete(id);
   }
 }

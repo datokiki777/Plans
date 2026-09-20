@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
-import { clientRepository } from "@/db/repositories";
+import { clientRepository, correctionRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
 import { buildJobShareFilename, buildJobShareText } from "@/entities/job";
+import type { Correction } from "@/entities/correction";
 import { generateElementImageBlob, shareImage, type ShareOutcome } from "@/services/ShareService";
 
 /** One reusable offscreen card + share flow. Works both for a single Job
@@ -13,13 +14,18 @@ import { generateElementImageBlob, shareImage, type ShareOutcome } from "@/servi
 export function useJobShare() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [activeJob, setActiveJob] = useState<Job | null>(null);
+  const [activeCorrections, setActiveCorrections] = useState<Correction[]>([]);
   const [sharing, setSharing] = useState(false);
 
   const share = async (job: Job): Promise<ShareOutcome> => {
     setSharing(true);
     try {
-      const client = await clientRepository.getById(job.clientId);
+      // Fetched BEFORE setActiveJob (not in a useEffect inside the share
+      // card) so the card's very first render already has everything -
+      // no race between an async fetch and the capture below.
+      const [client, corrections] = await Promise.all([clientRepository.getById(job.clientId), correctionRepository.listByJob(job.id)]);
       setActiveJob(job);
+      setActiveCorrections(corrections);
       // Wait for the card to re-render with this job's data before
       // capturing it, plus the same short settle pause V1 used.
       await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -37,5 +43,5 @@ export function useJobShare() {
     }
   };
 
-  return { cardRef, activeJob, sharing, share };
+  return { cardRef, activeJob, activeCorrections, sharing, share };
 }

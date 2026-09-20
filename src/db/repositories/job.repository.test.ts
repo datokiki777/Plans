@@ -223,4 +223,54 @@ describe("LocalJobRepository", () => {
     expect(await jobs.getById(job.id)).toBeUndefined();
     expect((await jobs.list()).map((j) => j.id)).not.toContain(job.id);
   });
+
+  it("delete() cascades to the job's corrections AND their files - the exact reported requirement", async () => {
+    const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
+    const job = await jobs.create(
+      blankJobInput({ clientId: client.id, status: "active", clientSnapshot: { fullName: "x", address: "", phone: "" } })
+    );
+    const correctionId = "correction-1";
+    await testDb.corrections.add({
+      id: correctionId,
+      jobId: job.id,
+      status: "pending",
+      comment: "კუთხე არ ზის",
+      resolvedDate: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    });
+    await testDb.correctionFiles.add({
+      id: "file-1",
+      correctionId,
+      fileType: "image",
+      fileName: "photo.jpg",
+      blob: new Blob(["x"]),
+      createdAt: "2026-01-01T00:00:00.000Z"
+    });
+
+    await jobs.delete(job.id);
+
+    expect(await testDb.corrections.where("jobId").equals(job.id).count()).toBe(0);
+    expect(await testDb.correctionFiles.where("correctionId").equals(correctionId).count()).toBe(0);
+  });
+
+  it("archive() (not delete) leaves the job's corrections completely untouched - archiving is always safe", async () => {
+    const client = await clients.create({ fullName: "კლიენტი", address: "", phone: "", googleMapsLink: "", notes: "" });
+    const job = await jobs.create(
+      blankJobInput({ clientId: client.id, status: "active", clientSnapshot: { fullName: "x", address: "", phone: "" } })
+    );
+    await testDb.corrections.add({
+      id: "correction-1",
+      jobId: job.id,
+      status: "pending",
+      comment: "კუთხე არ ზის",
+      resolvedDate: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    });
+
+    await jobs.archive(job.id);
+
+    expect(await testDb.corrections.where("jobId").equals(job.id).count()).toBe(1);
+  });
 });

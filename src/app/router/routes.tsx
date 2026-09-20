@@ -5,6 +5,8 @@ import { AppShell } from "@/app/layout/AppShell";
 const DashboardPage = lazy(() => import("@/routes/DashboardPage"));
 const JobsPage = lazy(() => import("@/routes/JobsPage"));
 const JobDetailPage = lazy(() => import("@/routes/JobDetailPage"));
+const CorrectionsPage = lazy(() => import("@/routes/CorrectionsPage"));
+const AllCorrectionsPage = lazy(() => import("@/routes/AllCorrectionsPage"));
 const GroupsPage = lazy(() => import("@/routes/GroupsPage"));
 const LoadingPage = lazy(() => import("@/routes/LoadingPage"));
 const WorkersPage = lazy(() => import("@/routes/WorkersPage"));
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: "jobs", element: <JobsPage /> },
       { path: "jobs/:id", element: <JobDetailPage /> },
+      { path: "jobs/:id/corrections", element: <CorrectionsPage /> },
+      { path: "corrections", element: <AllCorrectionsPage /> },
       { path: "groups", element: <GroupsPage /> },
       { path: "loading", element: <LoadingPage /> },
       { path: "loading/:id", element: <LoadingPage /> },

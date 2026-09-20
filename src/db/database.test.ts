@@ -24,10 +24,12 @@ describe("AppDatabase", () => {
 
     await testDb.open();
 
-    expect(testDb.verno).toBe(8);
+    expect(testDb.verno).toBe(9);
     expect(testDb.tables.map((t) => t.name).sort()).toEqual(
       [
         "clients",
+        "correctionFiles",
+        "corrections",
         "fieldTemplates",
         "groupPeriods",
         "groups",
@@ -93,7 +95,7 @@ describe("AppDatabase", () => {
     openDatabases.push(upgraded);
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(8);
+    expect(upgraded.verno).toBe(9);
     const migratedJob = await upgraded.jobs.get("legacy-job-1");
     expect(migratedJob?.statusBeforeArchive).toBeNull();
     expect(migratedJob?.status).toBe("archived"); // untouched by the migration itself
@@ -323,6 +325,61 @@ describe("AppDatabase", () => {
     const migratedList = await upgraded.loadingLists.get("list-legacy-v7");
     expect(migratedList?.mapsLink).toBe("");
     expect(migratedList?.loadingDate).toBe("2026-09-05"); // untouched by the migration itself
+  });
+
+  it("migrates an existing pre-version-9 database: the new corrections/correctionFiles tables exist and are usable", async () => {
+    const dbName = `test-migration-v9-${crypto.randomUUID()}`;
+
+    const legacyDb = new Dexie(dbName);
+    legacyDb.version(8).stores({
+      clients: "id, fullName, archivedAt",
+      jobs: "id, clientId, groupId, status, jobDate, [groupId+status]",
+      groups: "id, name, archivedAt",
+      fieldTemplates: "id, fieldKey, [fieldKey+sortOrder]",
+      loadingLists: "id, archivedAt",
+      loadingItems: "id, loadingListId, [loadingListId+category]",
+      workers: "id, archivedAt",
+      stays: "id, workerId, [workerId+entryDate]",
+      groupPeriods: "id, groupId, [groupId+startDate]",
+      migrationRecords: "id, sourceExportId"
+    });
+    await legacyDb.open();
+    await legacyDb.table("jobs").add({
+      id: "job-legacy",
+      clientId: "c1",
+      groupId: null,
+      status: "active",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    });
+    legacyDb.close();
+
+    const upgraded = new AppDatabase(dbName);
+    openDatabases.push(upgraded);
+    await upgraded.open();
+
+    // The tables didn't exist before - nothing to backfill, just confirm
+    // they're there and usable after the upgrade.
+    await upgraded.corrections.add({
+      id: "correction-1",
+      jobId: "job-legacy",
+      status: "pending",
+      comment: "კუთხე არ ზის",
+      resolvedDate: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    });
+    await upgraded.correctionFiles.add({
+      id: "file-1",
+      correctionId: "correction-1",
+      fileType: "image",
+      fileName: "photo.jpg",
+      blob: new Blob(["fake-image-bytes"], { type: "image/jpeg" }),
+      createdAt: "2026-01-01T00:00:00.000Z"
+    });
+
+    expect(await upgraded.corrections.where("jobId").equals("job-legacy").count()).toBe(1);
+    expect(await upgraded.correctionFiles.where("correctionId").equals("correction-1").count()).toBe(1);
   });
 
   it("can write and read a record in each table (basic round-trip)", async () => {

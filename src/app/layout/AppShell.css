@@ -24,12 +24,13 @@
   justify-content: center;
   text-align: center;
   min-height: var(--tap-min);
-  padding: var(--space-2) var(--space-1);
+  padding: var(--space-1) 2px;
   border-radius: var(--radius-sm);
   color: #5a4400;
   text-decoration: none;
   font-weight: 700;
-  font-size: var(--text-sm);
+  font-size: 11px;
+  line-height: 1.15;
   background: #f6c944;
   -webkit-tap-highlight-color: transparent;
   outline: none;

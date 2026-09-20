@@ -8,6 +8,8 @@ import type { LoadingItem } from "@/entities/loading-item";
 import type { Worker } from "@/entities/worker";
 import type { Stay } from "@/entities/stay";
 import type { GroupPeriod } from "@/entities/group-period";
+import type { Correction } from "@/entities/correction";
+import type { CorrectionFile } from "@/entities/correction-file";
 import type { MigrationRecord } from "@/entities/migration-record";
 
 /**
@@ -30,6 +32,8 @@ export class AppDatabase extends Dexie {
   workers!: EntityTable<Worker, "id">;
   stays!: EntityTable<Stay, "id">;
   groupPeriods!: EntityTable<GroupPeriod, "id">;
+  corrections!: EntityTable<Correction, "id">;
+  correctionFiles!: EntityTable<CorrectionFile, "id">;
   migrationRecords!: EntityTable<MigrationRecord, "id">;
 
   constructor(name: string = V2_DB_NAME) {
@@ -185,6 +189,27 @@ export class AppDatabase extends Dexie {
             list.mapsLink = "";
           }
         });
+    });
+
+    // Version 9: adds the corrections and correctionFiles tables (a job's
+    // "needs fixing" items, each with its own photos/PDF) - a genuinely
+    // new pair of tables, so this needs a full .stores() definition (all
+    // prior tables repeated unchanged, same requirement as version 5's
+    // groupPeriods table). No upgrade() needed - there's no prior shape of
+    // this data to backfill, these tables simply didn't exist before.
+    this.version(9).stores({
+      clients: "id, fullName, archivedAt",
+      jobs: "id, clientId, groupId, status, jobDate, [groupId+status]",
+      groups: "id, name, archivedAt",
+      fieldTemplates: "id, fieldKey, [fieldKey+sortOrder]",
+      loadingLists: "id, archivedAt",
+      loadingItems: "id, loadingListId, [loadingListId+category]",
+      workers: "id, archivedAt",
+      stays: "id, workerId, [workerId+entryDate]",
+      groupPeriods: "id, groupId, [groupId+startDate]",
+      corrections: "id, jobId, status",
+      correctionFiles: "id, correctionId",
+      migrationRecords: "id, sourceExportId"
     });
   }
 }

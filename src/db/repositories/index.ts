@@ -7,6 +7,8 @@ import { LocalTemplateRepository } from "./template.repository";
 import { LocalLoadingRepository } from "./loading.repository";
 import { LocalWorkerRepository } from "./worker.repository";
 import { LocalStayRepository } from "./stay.repository";
+import { LocalCorrectionRepository } from "./correction.repository";
+import { LocalCorrectionFileRepository } from "./correction-file.repository";
 import { LocalMigrationRepository } from "./migration.repository";
 
 /**
@@ -25,6 +27,8 @@ export const templateRepository = new LocalTemplateRepository(db);
 export const loadingRepository = new LocalLoadingRepository(db);
 export const workerRepository = new LocalWorkerRepository(db);
 export const stayRepository = new LocalStayRepository(db);
+export const correctionRepository = new LocalCorrectionRepository(db);
+export const correctionFileRepository = new LocalCorrectionFileRepository(db);
 export const migrationRepository = new LocalMigrationRepository(db);
 
 export type { ClientRepository } from "./client.repository";
@@ -35,4 +39,6 @@ export type { TemplateRepository } from "./template.repository";
 export type { LoadingRepository } from "./loading.repository";
 export type { WorkerRepository } from "./worker.repository";
 export type { StayRepository } from "./stay.repository";
+export type { CorrectionRepository, CorrectionUpdate } from "./correction.repository";
+export type { CorrectionFileRepository } from "./correction-file.repository";
 export type { MigrationRepository } from "./migration.repository";

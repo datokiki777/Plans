@@ -1,0 +1,1 @@
+var e={pending:`გასასწორებელია`,fixed:`გასწორებულია`,"not-applicable":`არ ჩაითვალა`};export{e as t};

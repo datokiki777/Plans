@@ -13,6 +13,7 @@ const PRIMARY_NAV = [
 const TOP_NAV = [
   { to: "/groups", label: "ჯგუფები" },
   { to: "/templates", label: "შაბლონები" },
+  { to: "/corrections", label: "გამოსასწორებლები" },
   { to: "/settings", label: "პარამეტრები" }
 ];
 

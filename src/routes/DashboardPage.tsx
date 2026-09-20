@@ -118,7 +118,7 @@ function JobRow({
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const showToast = useToast();
-  const { cardRef, activeJob, sharing, share } = useJobShare();
+  const { cardRef, activeJob, activeCorrections, sharing, share } = useJobShare();
   const { cardRef: loadingCardRef, activeList, activeItems, sharing: loadingSharing, share: shareLoading } = useLoadingShare();
 
   useEffect(() => {
@@ -288,7 +288,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Offscreen - only used as html2canvas's rasterization source when sharing. */}
-      <JobShareCard ref={cardRef} job={activeJob} />
+      <JobShareCard ref={cardRef} job={activeJob} corrections={activeCorrections} />
       <LoadingShareCard ref={loadingCardRef} title={activeList?.title ?? ""} items={activeItems} specialNote={activeList?.specialNote} />
     </div>
   );
