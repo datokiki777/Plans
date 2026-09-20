@@ -13,7 +13,7 @@ const PRIMARY_NAV = [
 const TOP_NAV = [
   { to: "/groups", label: "ჯგუფები" },
   { to: "/templates", label: "შაბლონები" },
-  { to: "/corrections", label: "გამოსასწორებლები" },
+  { to: "/corrections", label: "გამოსასწორებლები", icon: "🔧" },
   { to: "/settings", label: "პარამეტრები" }
 ];
 
@@ -31,6 +31,8 @@ export function AppShell() {
               key={item.to}
               to={item.to}
               className={`app-shell__top-link${active ? " app-shell__top-link--active" : ""}`}
+              aria-label={item.label}
+              title={item.label}
               onClick={(e) => {
                 // A toggle, not a plain link: tapping the already-open
                 // section closes it back to home instead of doing
@@ -41,7 +43,7 @@ export function AppShell() {
                 }
               }}
             >
-              {item.label}
+              {"icon" in item ? <span aria-hidden="true">{item.icon}</span> : item.label}
             </NavLink>
           );
         })}

@@ -41,6 +41,11 @@
   outline: none;
 }
 
+.app-shell__top-link span[aria-hidden="true"] {
+  font-size: 18px;
+  line-height: 1;
+}
+
 .app-shell__top-link--active {
   color: #3d3000;
   background: #e0ac0e;
