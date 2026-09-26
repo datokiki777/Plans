@@ -37,6 +37,13 @@
   margin: 0;
 }
 
+.job-detail__row-value--link {
+  display: inline-block;
+  color: var(--color-brand);
+  text-decoration: none;
+  font-weight: 700;
+}
+
 .job-detail__row-value--highlight {
   color: var(--color-danger);
   font-weight: 700;

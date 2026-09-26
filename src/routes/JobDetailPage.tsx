@@ -7,17 +7,28 @@ import { StatusToggle } from "@/shared/ui/StatusToggle";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/Toast";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
-import { jobRepository, groupRepository, correctionRepository } from "@/db/repositories";
+import { jobRepository, groupRepository, correctionRepository, clientRepository } from "@/db/repositories";
 import type { Job } from "@/entities/job";
 import type { Group } from "@/entities/group";
 import { formatDateOnly } from "@/shared/lib/date";
+import { normalizeMapsLink } from "@/shared/lib/maps";
 import { JobForm } from "@/features/jobs/JobForm";
 import { JobShareCard } from "@/features/jobs/JobShareCard";
 import { useJobShare } from "@/features/jobs/useJobShare";
 import { ShareIconButton } from "@/shared/ui/ShareIconButton";
 import "./JobDetailPage.css";
 
-function DetailRow({ label, value, highlight }: { label: string; value?: string | string[] | null; highlight?: boolean }) {
+function DetailRow({
+  label,
+  value,
+  highlight,
+  href
+}: {
+  label: string;
+  value?: string | string[] | null;
+  highlight?: boolean;
+  href?: string;
+}) {
   if (!value || (Array.isArray(value) && value.length === 0)) return null;
   return (
     <div className="job-detail__row">
@@ -28,6 +39,15 @@ function DetailRow({ label, value, highlight }: { label: string; value?: string 
             <li key={i}>{v}</li>
           ))}
         </ul>
+      ) : href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`job-detail__row-value job-detail__row-value--link${highlight ? " job-detail__row-value--highlight" : ""}`}
+        >
+          📍 {value}
+        </a>
       ) : (
         <p className={`job-detail__row-value${highlight ? " job-detail__row-value--highlight" : ""}`}>{value}</p>
       )}
@@ -66,6 +86,11 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
   const [editOpen, setEditOpen] = useState(false);
   const { cardRef, activeJob, activeCorrections, sharing, share } = useJobShare();
   const [pendingCorrections, setPendingCorrections] = useState(0);
+  const [mapsLink, setMapsLink] = useState("");
+
+  useEffect(() => {
+    clientRepository.getById(job.clientId).then((client) => setMapsLink(client?.googleMapsLink ?? ""));
+  }, [job.clientId]);
 
   useEffect(() => {
     correctionRepository.listByJob(job.id).then((list) => setPendingCorrections(list.filter((c) => c.status === "pending").length));
@@ -132,7 +157,7 @@ function JobDetailContent({ job, group, onReload }: { job: Job; group: Group | n
         <h2 className="job-detail__section-title">საკონტაქტო ინფორმაცია</h2>
         <DetailRow label="სახელი" value={job.clientSnapshot.fullName} />
         <DetailRow label="გამყიდველი" value={job.seller} />
-        <DetailRow label="მისამართი" value={job.clientSnapshot.address} />
+        <DetailRow label="მისამართი" value={job.clientSnapshot.address} href={mapsLink ? normalizeMapsLink(mapsLink) : undefined} />
         {job.clientSnapshot.phone && (
           <div className="job-detail__row">
             <span className="job-detail__row-label">ტელეფონი</span>
